@@ -11,5 +11,6 @@ int main() {
     return 1;
   }
 
+  avio::shutdown_engine(engine);
   return 0;
 }
