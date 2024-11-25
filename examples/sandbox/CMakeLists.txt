@@ -1,0 +1,2 @@
+create_executable_module(sandbox)
+target_link_libraries(sandbox PUBLIC avio)

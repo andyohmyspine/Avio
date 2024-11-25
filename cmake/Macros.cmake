@@ -1,0 +1,20 @@
+macro(collect_module_files_cpp)
+    file(GLOB_RECURSE _module_files *.cpp *.hpp *.inl LIST_DIRECTORIES ON)
+endmacro()
+
+macro(default_module_properties _name)
+    target_compile_features(${_name} PUBLIC cxx_std_23)
+    target_include_directories(${_name} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+endmacro()
+
+macro(create_executable_module _name)
+    collect_module_files_cpp()
+    add_executable(${_name} ${_module_files})
+    default_module_properties(${_name})
+endmacro()
+
+macro(create_static_module _name)
+    collect_module_files_cpp()
+    add_library(${_name} STATIC ${_module_files})
+    default_module_properties(${_name})
+endmacro()
