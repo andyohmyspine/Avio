@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(Avio)
 
+add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
+
 include("cmake/Macros.cmake")
 add_subdirectory(src)
 
