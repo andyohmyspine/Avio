@@ -3,7 +3,11 @@
 #include <cstdint>
 
 #include <string>
-using std::string;
-
 #include <string_view>
+
+namespace avio {
+
+using std::string;
 using std::string_view;
+
+}
