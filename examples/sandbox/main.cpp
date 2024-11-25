@@ -9,6 +9,9 @@ int main() {
   } catch (const avio::Error& error) {
     AV_LOG(critical, "Exception caught: {}", error.what());
     return 1;
+  } catch(const std::runtime_error& error) {
+    AV_LOG(critical, "Exception caught: {}", error.what());
+    return 1;
   }
 
   avio::shutdown_engine(engine);

@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 project(Avio)
 
+# Options
+option(AVIO_ENABLE_GPU_VALIDATION "whether to enable GPU validation." ON)
+
 add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-
 
 include("cmake/Macros.cmake")
 add_subdirectory(src)

@@ -44,15 +44,33 @@ bool d3d12_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
            std::size(adapter_desc.Description));
   AV_LOG(info, "DXGI adapter selected: {}", adapter_name);
 
-  // Create device
+// Create device
+#ifdef AVIO_ENABLE_GPU_VALIDATION
+  ID3D12Debug* debug{};
+  HR_ASSERT(D3D12GetDebugInterface(IID_PPV_ARGS(&debug)));
+  debug->EnableDebugLayer();
+  debug->Release();
+#endif
+
   HR_ASSERT(D3D12CreateDevice(d3d12->adapter, D3D_FEATURE_LEVEL_12_0,
                               IID_PPV_ARGS(&d3d12->device)));
+
+  // Create graphics queue
+  D3D12_COMMAND_QUEUE_DESC graphics_queue_desc{};
+  graphics_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+  zero_mem(graphics_queue_desc);
+  HR_ASSERT(d3d12->device->CreateCommandQueue(
+      &graphics_queue_desc, IID_PPV_ARGS(&d3d12->graphics_queue)));
+  AV_LOG(info, "D3D12 Graphics queue created");
 
   return true;
 }
 
 void d3d12_rhi_shutdown(RHI* rhi) {
   RhiD3D12* d3d12 = cast_rhi(rhi);
+
+  // Release the graphics queue
+  d3d12->graphics_queue->Release();
 
   // Release the device.
   // TODO: Need to clear the queue.

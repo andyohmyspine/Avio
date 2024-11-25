@@ -12,7 +12,7 @@ else()
   set(AVIO_VULKAN_AVAILABLE OFF CACHE BOOL "")
 endif()
 
-option(AVIO_COMPILE_RHI "Which RHI to compile. Variants are: d3d12, vulkan" vulkan)
+set(AVIO_COMPILE_RHI "vulkan" CACHE STRING "")
 
 if(AVIO_D3D12_AVAILABLE)
   if(AVIO_COMPILE_RHI STREQUAL d3d12)
