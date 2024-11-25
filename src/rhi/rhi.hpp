@@ -9,18 +9,21 @@ namespace avio {
  */
 namespace infos {
 struct RHIInfo {};
-}
+}  // namespace infos
 /**
  * Rhi object. That should be initialized.
  */
-struct RHI {};
+struct RHI {
+  bool (*init_impl)(RHI* rhi, const infos::RHIInfo& info);
+  void (*shutdown_impl)(RHI* rhi);
+};
 
 bool init_rhi(RHI** out_rhi, const infos::RHIInfo& info);
 void shutdown_rhi(RHI* rhi);
 
 extern RHI* get_rhi();
 
-template<typename T>
+template <typename T>
 extern T* get_rhi_as() {
   return (T*)get_rhi();
 }
