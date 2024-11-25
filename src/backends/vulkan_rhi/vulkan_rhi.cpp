@@ -1,4 +1,5 @@
 #include "vulkan_rhi.hpp"
+#include "vulkan_surface.hpp"
 
 #include <array>
 #include <ranges>
@@ -119,7 +120,7 @@ static void pick_suitable_physical_device(RhiVulkan* vulkan,
 static void create_vulkan_device(RhiVulkan* vulkan, const infos::RHIInfo& info);
 
 bool vulkan_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
-  auto vulkan = cast_rhi(rhi);
+  auto vulkan = cast_rhi<RhiVulkan>(rhi);
   create_vulkan_instance(vulkan, info);
   pick_suitable_physical_device(vulkan, info);
 
@@ -135,7 +136,7 @@ bool vulkan_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
 
 // ---------------------------------------------------------------------------------------------
 void vulkan_rhi_shutdown(RHI* rhi) {
-  auto vulkan = cast_rhi(rhi);
+  auto vulkan = cast_rhi<RhiVulkan>(rhi);
 
   // Destroy the device
   vulkan->graphics_queue.waitIdle();
@@ -302,8 +303,17 @@ void create_vulkan_device(RhiVulkan* vulkan, const infos::RHIInfo& info) {
 }
 
 // ---------------------------------------------------------------------------------------------
-RHI* get_rhi() {
+RHI* get_rhi_vulkan() {
   return &g_rhi_vulkan.base;
 }
 
 }  // namespace avio
+
+void avio::vulkan::init_global_rhi_pointers() {
+  // Default functions
+  get_rhi = get_rhi_vulkan;
+
+  // Surface functions
+  rhi_create_surface = vulkan_create_surface;
+  rhi_destroy_surface = vulkan_destroy_surface;
+}

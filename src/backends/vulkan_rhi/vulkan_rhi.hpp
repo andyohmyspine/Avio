@@ -37,4 +37,8 @@ struct RhiVulkan {
 
 extern RhiVulkan g_rhi_vulkan;
 
+namespace vulkan {
+  void init_global_rhi_pointers();
+}
+
 }  // namespace avio

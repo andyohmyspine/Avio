@@ -17,8 +17,18 @@ struct RhiD3D12 {
 
 extern RhiD3D12 g_rhi_d3d12;
 
-inline auto get_d3d12_device() { return get_d3d12_rhi()->device; }
-inline auto get_dxgi_factory() { return get_d3d12_rhi()->dxgi_factory; }
-inline auto get_dxgi_adapter() { return get_d3d12_rhi()->adapter; }
+inline auto get_d3d12_device() {
+  return g_rhi_d3d12.device;
+}
+inline auto get_dxgi_factory() {
+  return g_rhi_d3d12.dxgi_factory;
+}
+inline auto get_dxgi_adapter() {
+  return g_rhi_d3d12.adapter;
+}
+
+namespace d3d12_rhi {
+  void init_global_rhi_pointers();
+}
 
 }  // namespace avio

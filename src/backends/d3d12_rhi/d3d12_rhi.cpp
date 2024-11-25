@@ -1,4 +1,5 @@
 #include "d3d12_rhi.hpp"
+#include "d3d12_surface.hpp"
 
 namespace avio {
 
@@ -13,7 +14,7 @@ RhiD3D12 g_rhi_d3d12{
         },
 };
 
-RHI* get_rhi() {
+static RHI* get_rhi_d3d12() {
   return &g_rhi_d3d12.base;
 }
 
@@ -25,7 +26,7 @@ bool d3d12_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
   UINT flags = 0;
 #endif
 
-  RhiD3D12* d3d12 = cast_rhi(rhi);
+  RhiD3D12* d3d12 = cast_rhi<RhiD3D12>(rhi);
   HR_ASSERT(CreateDXGIFactory2(flags, IID_PPV_ARGS(&d3d12->dxgi_factory)));
 
   // Pick adapter
@@ -67,7 +68,7 @@ bool d3d12_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
 }
 
 void d3d12_rhi_shutdown(RHI* rhi) {
-  RhiD3D12* d3d12 = cast_rhi(rhi);
+  RhiD3D12* d3d12 = cast_rhi<RhiD3D12>(rhi);
 
   // Release the graphics queue
   d3d12->graphics_queue->Release();
@@ -86,3 +87,11 @@ void d3d12_rhi_shutdown(RHI* rhi) {
 }
 
 }  // namespace avio
+
+void avio::d3d12_rhi::init_global_rhi_pointers() {
+  get_rhi = get_rhi_d3d12;
+
+  // Surface pointers
+  rhi_create_surface = d3d12_create_surface;
+  rhi_destroy_surface = d3d12_destroy_surface;
+}

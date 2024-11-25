@@ -6,7 +6,9 @@
 namespace avio {
 
 namespace infos {
-struct EngineInfo {};
+struct EngineInfo {
+  RenderAPI render_api {};
+};
 }  // namespace infos
 
 struct Engine {
