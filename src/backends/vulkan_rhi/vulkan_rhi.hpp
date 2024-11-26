@@ -40,7 +40,14 @@ namespace avio::vulkan {
 
     ArrayPool<VulkanSurface, 16> surfaces;
     ArrayPool<VulkanSwapchain, 16> swapchains;
+
+    // For now we will use the single submit per frame approach, though this isn't the best idea
+    // in a long run.
+    // So this solution is ok for now.
+    std::array<vk::Semaphore, RHI_NUM_FRAMES_IN_FLIGHT> render_finished_semaphores;
   };
+
+  std::span<vk::Semaphore> vulkan_get_present_wait_semaphores(RhiVulkan* vulkan);
 
   extern RhiVulkan g_rhi_vulkan;
 

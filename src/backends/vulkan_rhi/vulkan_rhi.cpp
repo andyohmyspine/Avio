@@ -46,11 +46,9 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  static VkBool32 vulkan_callback(
-      VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-      VkDebugUtilsMessageTypeFlagsEXT messageTypes,
-      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-      void* pUserData) {
+  static VkBool32 vulkan_callback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                                  VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+                                  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
     switch (messageSeverity) {
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
         AV_LOG(error, "Vulkan validation: {}", pCallbackData->pMessage);
@@ -69,16 +67,14 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  static void assert_instance_extensions_supported(
-      std::span<const char* const> extensions) {
+  static void assert_instance_extensions_supported(std::span<const char* const> extensions) {
     auto supported_extensions = vk::enumerateInstanceExtensionProperties();
     for (const auto& required : extensions) {
       bool is_supported = false;
       for (const auto& supported : supported_extensions) {
         if (strcmp(required, supported.extensionName.data()) == 0) {
           is_supported = true;
-          AV_LOG(trace, "Vulkan instance extension '{}' is supported.",
-                 required);
+          AV_LOG(trace, "Vulkan instance extension '{}' is supported.", required);
           break;
         }
       }
@@ -90,8 +86,7 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  static void assert_valication_layers_supported(
-      std::span<const char* const> layers) {
+  static void assert_valication_layers_supported(std::span<const char* const> layers) {
     if (layers.empty()) {
       return;
     }
@@ -114,13 +109,17 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  static void create_vulkan_instance(RhiVulkan* vulkan,
-                                     const infos::RHIInfo& info);
-  static void pick_suitable_physical_device(RhiVulkan* vulkan,
-                                            const infos::RHIInfo& info);
+  static void create_rhi_sync(RhiVulkan* vulkan, const infos::RHIInfo& info) {
+    for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
+      vulkan->render_finished_semaphores[index] = vulkan->device.createSemaphore({});
+    }
+  }
 
-  static void create_vulkan_device(RhiVulkan* vulkan,
-                                   const infos::RHIInfo& info);
+  // ---------------------------------------------------------------------------------------------
+  static void create_vulkan_instance(RhiVulkan* vulkan, const infos::RHIInfo& info);
+  static void pick_suitable_physical_device(RhiVulkan* vulkan, const infos::RHIInfo& info);
+
+  static void create_vulkan_device(RhiVulkan* vulkan, const infos::RHIInfo& info);
 
   bool vulkan_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
     auto vulkan = cast_rhi<RhiVulkan>(rhi);
@@ -129,11 +128,11 @@ namespace avio::vulkan {
 
     if (vulkan->physical_device.device) {
       auto device_props = vulkan->physical_device.device.getProperties();
-      AV_LOG(info, "Selected vulkan adapter: {}",
-             device_props.deviceName.data());
+      AV_LOG(info, "Selected vulkan adapter: {}", device_props.deviceName.data());
     }
 
     create_vulkan_device(vulkan, info);
+    create_rhi_sync(vulkan, info);
 
     return true;
   }
@@ -145,13 +144,18 @@ namespace avio::vulkan {
     // Destroy the device
     vulkan->graphics_queue.waitIdle();
     vulkan->device.waitIdle();
+
+    // Destroy render finished semaphores
+    for(auto& semaphore : vulkan->render_finished_semaphores) {
+      vulkan->device.destroy(semaphore);
+    }
+
     vulkan->device.destroy();
 
     // Destroy the debug messenger
 #ifdef AVIO_ENABLE_GPU_VALIDATION
     PFN_vkDestroyDebugUtilsMessengerEXT destroy_messenger_func =
-        (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            vulkan->instance, "vkDestroyDebugUtilsMessengerEXT");
+        (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vulkan->instance, "vkDestroyDebugUtilsMessengerEXT");
     destroy_messenger_func(vulkan->instance, vulkan->debug_messenger, nullptr);
 #endif
 
@@ -196,13 +200,11 @@ namespace avio::vulkan {
 
 #ifdef AVIO_ENABLE_GPU_VALIDATION
     PFN_vkCreateDebugUtilsMessengerEXT create_messenger_func =
-        (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
-            vulkan->instance, "vkCreateDebugUtilsMessengerEXT");
+        (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(vulkan->instance, "vkCreateDebugUtilsMessengerEXT");
 
     VkDebugUtilsMessengerEXT messenger;
     VkDebugUtilsMessengerCreateInfoEXT messenger_info_c = msg_info;
-    VK_ASSERT(create_messenger_func(vulkan->instance, &messenger_info_c,
-                                    nullptr, &messenger));
+    VK_ASSERT(create_messenger_func(vulkan->instance, &messenger_info_c, nullptr, &messenger));
     vulkan->debug_messenger = messenger;
 #endif
   }
@@ -219,10 +221,8 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  static bool device_supports_extensions(
-      vk::PhysicalDevice device, std::span<const char* const> extensions) {
-    const auto supported_extensions =
-        device.enumerateDeviceExtensionProperties();
+  static bool device_supports_extensions(vk::PhysicalDevice device, std::span<const char* const> extensions) {
+    const auto supported_extensions = device.enumerateDeviceExtensionProperties();
     for (const auto& required : extensions) {
       bool is_supported = false;
       for (const auto& supported : supported_extensions) {
@@ -240,8 +240,7 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  static VulkanQueueFamilyIndices get_queue_family_indices(
-      vk::PhysicalDevice device) {
+  static VulkanQueueFamilyIndices get_queue_family_indices(vk::PhysicalDevice device) {
     auto queue_props = device.getQueueFamilyProperties();
     VulkanQueueFamilyIndices indices = {};
 
@@ -257,16 +256,13 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  void pick_suitable_physical_device(RhiVulkan* vulkan,
-                                     const infos::RHIInfo& info) {
+  void pick_suitable_physical_device(RhiVulkan* vulkan, const infos::RHIInfo& info) {
     auto physical_devices = vulkan->instance.enumeratePhysicalDevices();
     auto required_device_extensions = get_required_device_extensions();
     for (const vk::PhysicalDevice& device : physical_devices) {
-      const bool supports_extensions =
-          device_supports_extensions(device, required_device_extensions);
+      const bool supports_extensions = device_supports_extensions(device, required_device_extensions);
 
-      const VulkanQueueFamilyIndices queue_indices =
-          get_queue_family_indices(device);
+      const VulkanQueueFamilyIndices queue_indices = get_queue_family_indices(device);
       const bool suitable = supports_extensions && queue_indices.is_valid();
 
       if (suitable) {
@@ -285,8 +281,7 @@ namespace avio::vulkan {
   void create_vulkan_device(RhiVulkan* vulkan, const infos::RHIInfo& info) {
     std::vector<vk::DeviceQueueCreateInfo> queue_infos{};
     float queue_priority = 1.0f;
-    for (const uint32_t queue_index :
-         vulkan->physical_device.queue_indices.as_unique_set()) {
+    for (const uint32_t queue_index : vulkan->physical_device.queue_indices.as_unique_set()) {
       queue_infos.push_back(vk::DeviceQueueCreateInfo()
                                 .setPQueuePriorities(&queue_priority)
                                 .setQueueCount(1)
@@ -295,22 +290,25 @@ namespace avio::vulkan {
 
     auto required_device_extensions = get_required_device_extensions();
     auto create_info =
-        vk::DeviceCreateInfo()
-            .setPEnabledExtensionNames(required_device_extensions)
-            .setQueueCreateInfos(queue_infos);
+        vk::DeviceCreateInfo().setPEnabledExtensionNames(required_device_extensions).setQueueCreateInfos(queue_infos);
 
     vulkan->device = vulkan->physical_device.device.createDevice(create_info);
     AV_LOG(info, "Vulkan logical device created.");
 
     // Pick queues
-    vulkan->graphics_queue = vulkan->device.getQueue(
-        vulkan->physical_device.queue_indices.graphics, 0);
+    vulkan->graphics_queue = vulkan->device.getQueue(vulkan->physical_device.queue_indices.graphics, 0);
     AV_LOG(info, "Vulkan graphics queue initialized.");
   }
 
   // ---------------------------------------------------------------------------------------------
   RHI* get_rhi_vulkan() {
     return &g_rhi_vulkan.base;
+  }
+
+  std::span<vk::Semaphore> vulkan_get_present_wait_semaphores(RhiVulkan* vulkan) {
+    std::span<vk::Semaphore>(
+      &vulkan->render_finished_semaphores[vulkan->base.current_frame_in_flight],
+      1 /* Select only single semaphore for now. */);
   }
 
   void init_global_rhi_pointers() {

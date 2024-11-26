@@ -7,6 +7,7 @@
 namespace avio {
 
   inline constexpr uint32_t RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT = 3;
+  inline constexpr uint32_t RHI_NUM_FRAMES_IN_FLIGHT = 2;
 
   enum class RenderAPI {
 #ifdef AVIO_D3D12_AVAILABLE
@@ -30,6 +31,8 @@ namespace avio {
  * Rhi object. That should be initialized.
  */
   struct RHI {
+    uint32_t current_frame_in_flight = 0;
+
     bool (*init_impl)(RHI* rhi, const infos::RHIInfo& info);
     void (*shutdown_impl)(RHI* rhi);
   };
