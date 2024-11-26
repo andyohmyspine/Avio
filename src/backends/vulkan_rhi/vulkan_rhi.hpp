@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vulkan_common.hpp"
+#include "vulkan_surface.hpp"
 
 #include "rhi.hpp"
 
@@ -33,6 +34,8 @@ struct RhiVulkan {
   VulkanPhysicalDevice physical_device;
   vk::Device device;
   vk::Queue graphics_queue;
+
+  ArrayPool<VulkanSurface, 16> surfaces;
 };
 
 extern RhiVulkan g_rhi_vulkan;

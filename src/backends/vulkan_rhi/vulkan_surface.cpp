@@ -12,11 +12,10 @@
 namespace avio {
 
 RhiSurface* vulkan_create_surface(RHI* rhi, const infos::RhiSurfaceInfo& info) {
-  VulkanSurface* surface = new VulkanSurface;
+  RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
+  VulkanSurface* surface = vulkan->surfaces.allocate();
 
   surface->base.info = info;
-
-  RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
   VkSurfaceKHR vk_surface{};
 
 // ------ WINDOWS -----------
@@ -37,7 +36,6 @@ VkXlibSurfaceCreateInfo create_info {
   .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
   .pNext = nullptr,
   .flags = 0,
-  .dpy = 
 };
 
 // ------ MAC -----------
@@ -58,5 +56,7 @@ void vulkan_destroy_surface(RHI* rhi, RhiSurface* surface) {
   if (vulkan && vk_surf) {
     vkDestroySurfaceKHR(vulkan->instance, vk_surf->vulkan_surface, nullptr);
   }
+
+  vulkan->surfaces.deallocate(vk_surf);
 }
 }  // namespace avio

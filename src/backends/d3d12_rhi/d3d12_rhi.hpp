@@ -13,6 +13,8 @@ struct RhiD3D12 {
   ID3D12Device5* device;
 
   ID3D12CommandQueue* graphics_queue;
+
+  ArrayPool<RhiSurface, 16> surfaces;
 };
 
 extern RhiD3D12 g_rhi_d3d12;

@@ -12,13 +12,14 @@ void sandbox_main(avio::Engine& engine) {
   GLFWwindow* window = glfwCreateWindow(1280, 720, "Sandbox", nullptr, nullptr);
 
   // Create surface
-  avio::infos::RhiSurfaceInfo surface_info {
+  avio::infos::RhiSurfaceInfo surface_info{
 #ifdef WIN32
-  .hwnd = glfwGetWin32Window(window),
+      .hwnd = glfwGetWin32Window(window),
 #endif
   };
 
-  avio::RhiSurface* surface = avio::rhi_create_surface(engine.rhi, surface_info);
+  avio::RhiSurface* surface =
+      avio::rhi_create_surface(engine.rhi, surface_info);
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
