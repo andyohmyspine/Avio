@@ -32,4 +32,7 @@ namespace avio {
 
   using PFN_rhi_present_swapchain = void(*)(RHI* rhi, RhiSwapchain* swapchain);
   inline PFN_rhi_present_swapchain rhi_present_swapchain;
+
+  using PFN_rhi_submit_frame = void(*)(RHI* rhi);
+  inline PFN_rhi_submit_frame rhi_submit_frame;
 }  // namespace avio

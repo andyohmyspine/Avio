@@ -26,6 +26,7 @@ void sandbox_main(avio::Engine& engine) {
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
 
+    avio::rhi_submit_frame(engine.rhi);
     avio::rhi_present_swapchain(engine.rhi, swapchain);
   }
 
@@ -41,7 +42,7 @@ int main() {
   AV_COMMON_CATCH() {
     AV_ASSERT_MSG(avio::init_engine(engine,
                                     {
-                                        .render_api = avio::RenderAPI::vulkan,
+                                        .render_api = avio::RenderAPI::d3d12,
                                     }),
                   "Failed to initialize engine!");
     sandbox_main(engine);

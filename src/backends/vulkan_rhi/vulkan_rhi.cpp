@@ -165,6 +165,10 @@ namespace avio::vulkan {
     AV_LOG(info, "Vulkan RHI terminated.");
   }
 
+  static void vulkan_rhi_submit_frame(RHI* rhi) {
+
+  }
+
   // ---------------------------------------------------------------------------------------------
   void create_vulkan_instance(RhiVulkan* vulkan, const infos::RHIInfo& info) {
     auto app_info = vk::ApplicationInfo()
@@ -306,7 +310,7 @@ namespace avio::vulkan {
   }
 
   std::span<vk::Semaphore> vulkan_get_present_wait_semaphores(RhiVulkan* vulkan) {
-    std::span<vk::Semaphore>(
+    return std::span<vk::Semaphore>(
       &vulkan->render_finished_semaphores[vulkan->base.current_frame_in_flight],
       1 /* Select only single semaphore for now. */);
   }
@@ -314,6 +318,7 @@ namespace avio::vulkan {
   void init_global_rhi_pointers() {
     // Default functions
     get_rhi = get_rhi_vulkan;
+    rhi_submit_frame = vulkan_rhi_submit_frame;
 
     // Surface functions
     rhi_create_surface = vulkan_create_surface;
