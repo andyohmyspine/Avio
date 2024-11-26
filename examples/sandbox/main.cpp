@@ -20,11 +20,16 @@ void sandbox_main(avio::Engine& engine) {
 
   avio::RhiSurface* surface =
       avio::rhi_create_surface(engine.rhi, surface_info);
+  avio::RhiSwapchain* swapchain = avio::rhi_create_swapchain(
+      engine.rhi, {.surface = surface, .allow_vsync = false});
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
+
+    avio::rhi_present_swapchain(engine.rhi, swapchain);
   }
 
+  avio::rhi_destroy_swapchain(engine.rhi, swapchain);
   avio::rhi_destroy_surface(engine.rhi, surface);
 
   glfwTerminate();
@@ -35,10 +40,10 @@ int main() {
 
   AV_COMMON_CATCH() {
     AV_ASSERT_MSG(avio::init_engine(engine,
-                                   {
-                                       .render_api = avio::RenderAPI::d3d12,
-                                   }),
-                 "Failed to initialize engine!");
+                                    {
+                                        .render_api = avio::RenderAPI::d3d12,
+                                    }),
+                  "Failed to initialize engine!");
     sandbox_main(engine);
     avio::shutdown_engine(engine);
   };

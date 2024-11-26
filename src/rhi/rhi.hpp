@@ -2,8 +2,11 @@
 
 #include "core.hpp"
 #include "rhi_render_surface.hpp"
+#include "rhi_swapchain.hpp"
 
 namespace avio {
+
+  inline constexpr uint32_t RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT = 3;
 
   enum class RenderAPI {
 #ifdef AVIO_D3D12_AVAILABLE
