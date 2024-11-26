@@ -9,39 +9,39 @@
 
 namespace avio::vulkan {
 
-struct VulkanQueueFamilyIndices {
-  uint32_t graphics = UINT32_MAX;
+  struct VulkanQueueFamilyIndices {
+    uint32_t graphics = UINT32_MAX;
 
-  inline bool is_valid() const { return graphics != UINT32_MAX; }
+    inline bool is_valid() const { return graphics != UINT32_MAX; }
 
-  inline std::set<uint32_t> as_unique_set() const noexcept {
-    return {graphics};
-  }
-};
+    inline std::set<uint32_t> as_unique_set() const noexcept {
+      return {graphics};
+    }
+  };
 
-struct VulkanPhysicalDevice {
-  vk::PhysicalDevice device;
-  VulkanQueueFamilyIndices queue_indices;
-};
+  struct VulkanPhysicalDevice {
+    vk::PhysicalDevice device;
+    VulkanQueueFamilyIndices queue_indices;
+  };
 
-struct RhiVulkan {
-  RHI base;
+  struct RhiVulkan {
+    RHI base;
 
-  vk::Instance instance;
+    vk::Instance instance;
 
 #ifdef AVIO_ENABLE_GPU_VALIDATION
-  vk::DebugUtilsMessengerEXT debug_messenger;
+    vk::DebugUtilsMessengerEXT debug_messenger;
 #endif
 
-  VulkanPhysicalDevice physical_device;
-  vk::Device device;
-  vk::Queue graphics_queue;
+    VulkanPhysicalDevice physical_device;
+    vk::Device device;
+    vk::Queue graphics_queue;
 
-  ArrayPool<VulkanSurface, 16> surfaces;
-};
+    ArrayPool<VulkanSurface, 16> surfaces;
+  };
 
-extern RhiVulkan g_rhi_vulkan;
+  extern RhiVulkan g_rhi_vulkan;
 
-void init_global_rhi_pointers();
+  void init_global_rhi_pointers();
 
 }  // namespace avio::vulkan

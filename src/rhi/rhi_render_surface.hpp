@@ -8,14 +8,14 @@
 #include <Windows.h>
 
 namespace avio::infos {
-namespace detail {
+  namespace detail {
 
-struct RhiSurfaceInfoWin32 {
-  HWND hwnd;
-};
+    struct RhiSurfaceInfoWin32 {
+      HWND hwnd;
+    };
 
-}  // namespace detail
-using RhiSurfaceInfo = detail::RhiSurfaceInfoWin32;
+  }  // namespace detail
+  using RhiSurfaceInfo = detail::RhiSurfaceInfoWin32;
 }  // namespace avio::infos
 
 // ----------------------------------------------------
@@ -24,47 +24,40 @@ using RhiSurfaceInfo = detail::RhiSurfaceInfoWin32;
 namespace avio::infos {
 
   namespace detail {
-    struct RhiSurfaceInfoLinux {
-
-    }
-  }
+    struct RhiSurfaceInfoLinux {}
+  }  // namespace detail
 
   using RhiSurfaceInfo = detail::RhiSurfaceInfoLinux;
-}
+}  // namespace avio::infos
 
 #elif defined(__APPLE__)
 #error "Unsupported platform"
 namespace avio::infos {
 
   namespace detail {
-    struct RhiSurfaceInfoApple {
-
-    }
-  }
+    struct RhiSurfaceInfoApple {}
+  }  // namespace detail
 
   using RhiSurfaceInfo = detail::RhiSurfaceInfoApple;
-}
+}  // namespace avio::infos
 #endif
 
 namespace avio {
-struct RHI;
+  struct RHI;
+  struct RhiSurface {
+    infos::RhiSurfaceInfo info;
+  };
+  using PFN_rhi_create_surface =
+      RhiSurface* (*)(RHI* rhi, const infos::RhiSurfaceInfo& info);
 
-namespace infos {}  // namespace infos
-
-struct RhiSurface {
-  infos::RhiSurfaceInfo info;
-};
-using PFN_rhi_create_surface =
-    RhiSurface* (*)(RHI* rhi, const infos::RhiSurfaceInfo& info);
-
-/**
+  /**
  * @brief Create RHI surface.
  * @param rhi RHI to pass in
  * @param window Native window handle.
  */
-inline PFN_rhi_create_surface rhi_create_surface;
+  inline PFN_rhi_create_surface rhi_create_surface;
 
-using PFN_rhi_destroy_surface = void (*)(RHI* rhi, RhiSurface* surface);
-inline PFN_rhi_destroy_surface rhi_destroy_surface;
+  using PFN_rhi_destroy_surface = void (*)(RHI* rhi, RhiSurface* surface);
+  inline PFN_rhi_destroy_surface rhi_destroy_surface;
 
 }  // namespace avio

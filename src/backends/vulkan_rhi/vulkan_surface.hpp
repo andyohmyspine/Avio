@@ -10,6 +10,7 @@ namespace avio::vulkan {
     vk::SurfaceKHR vulkan_surface;
   };
 
-  RhiSurface* vulkan_create_surface(RHI* rhi, const infos::RhiSurfaceInfo& info);
+  RhiSurface* vulkan_create_surface(RHI* rhi,
+                                    const infos::RhiSurfaceInfo& info);
   void vulkan_destroy_surface(RHI* rhi, RhiSurface* surface);
-}
+}  // namespace avio::vulkan
