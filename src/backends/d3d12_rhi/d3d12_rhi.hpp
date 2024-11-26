@@ -3,7 +3,7 @@
 #include "d3d12_common.hpp"
 #include "rhi.hpp"
 
-namespace avio {
+namespace avio::dx12 {
 
 struct RhiD3D12 {
   RHI base;
@@ -28,9 +28,6 @@ inline auto get_dxgi_factory() {
 inline auto get_dxgi_adapter() {
   return g_rhi_d3d12.adapter;
 }
-
-namespace d3d12_rhi {
   void init_global_rhi_pointers();
-}
 
 }  // namespace avio

@@ -3,7 +3,7 @@
 #include "rhi_render_surface.hpp"
 #include "vulkan_common.hpp"
 
-namespace avio {
+namespace avio::vulkan {
   struct VulkanSurface {
     RhiSurface base;
 

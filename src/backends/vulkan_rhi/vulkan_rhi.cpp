@@ -7,7 +7,7 @@
 
 #define AV_REQUIRE_DESCRIPTOR_BUFFERS 0
 
-namespace avio {
+namespace avio::vulkan {
 
 static bool vulkan_rhi_init(RHI* rhi, const infos::RHIInfo& info);
 static void vulkan_rhi_shutdown(RHI* rhi);
@@ -307,9 +307,7 @@ RHI* get_rhi_vulkan() {
   return &g_rhi_vulkan.base;
 }
 
-}  // namespace avio
-
-void avio::vulkan::init_global_rhi_pointers() {
+void init_global_rhi_pointers() {
   // Default functions
   get_rhi = get_rhi_vulkan;
 
@@ -317,3 +315,5 @@ void avio::vulkan::init_global_rhi_pointers() {
   rhi_create_surface = vulkan_create_surface;
   rhi_destroy_surface = vulkan_destroy_surface;
 }
+
+}  // namespace avio::vulkan

@@ -7,14 +7,16 @@
 
 #include <set>
 
-namespace avio {
+namespace avio::vulkan {
 
 struct VulkanQueueFamilyIndices {
   uint32_t graphics = UINT32_MAX;
 
   inline bool is_valid() const { return graphics != UINT32_MAX; }
 
-  inline std::set<uint32_t> as_unique_set() const noexcept { return {graphics}; }
+  inline std::set<uint32_t> as_unique_set() const noexcept {
+    return {graphics};
+  }
 };
 
 struct VulkanPhysicalDevice {
@@ -40,8 +42,6 @@ struct RhiVulkan {
 
 extern RhiVulkan g_rhi_vulkan;
 
-namespace vulkan {
-  void init_global_rhi_pointers();
-}
+void init_global_rhi_pointers();
 
-}  // namespace avio
+}  // namespace avio::vulkan

@@ -7,6 +7,9 @@
 
 #include <spdlog/spdlog.h>
 
+#define AV_PASTE(a, b) a ## b
+#define AV_PASTE2(a, b) AV_PASTE(a, b)
+
 namespace avio {
 
 class Error : public std::runtime_error {
@@ -38,3 +41,25 @@ std::shared_ptr<spdlog::logger> get_logger();
 
 #define AV_LOG(level, format, ...) \
   avio::get_logger()->level(format, __VA_ARGS__)
+
+namespace avio {
+struct GuardedInvoke {
+  template <typename Func>
+  GuardedInvoke(Func&& func) {
+    try {
+      func();
+    } catch (const Error& error) {
+      AV_LOG(critical, "Exception caught: {}", error.what());
+      throw;
+    } catch (const std::runtime_error& error) {
+      AV_LOG(critical, "Exception caught: {}", error.what());
+      throw;
+    } catch (const std::exception& error) {
+      AV_LOG(critical, "Exception caught: {}", error.what());
+      throw;
+    }
+  }
+};
+}  // namespace avio
+
+#define AV_COMMON_CATCH(...) avio::GuardedInvoke AV_PASTE2(_guarded_invoke, __LINE__) = [&, __VA_ARGS__]

@@ -7,6 +7,6 @@
 
 #define VK_ASSERT(result) AV_ASSERT(((vk::Result)result) == vk::Result::eSuccess)
 
-namespace avio {
+namespace avio::vulkan {
   struct RhiVulkan;
 }

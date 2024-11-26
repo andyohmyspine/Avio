@@ -1,7 +1,7 @@
 #include "d3d12_rhi.hpp"
 #include "d3d12_surface.hpp"
 
-namespace avio {
+namespace avio::dx12 {
 
 static bool d3d12_rhi_init(RHI* rhi, const infos::RHIInfo& info);
 static void d3d12_rhi_shutdown(RHI* rhi);
@@ -86,12 +86,12 @@ void d3d12_rhi_shutdown(RHI* rhi) {
   AV_LOG(info, "D3D12 Rhi terminated.");
 }
 
-}  // namespace avio
-
-void avio::d3d12_rhi::init_global_rhi_pointers() {
+void init_global_rhi_pointers() {
   get_rhi = get_rhi_d3d12;
 
   // Surface pointers
   rhi_create_surface = d3d12_create_surface;
   rhi_destroy_surface = d3d12_destroy_surface;
 }
+
+}  // namespace avio::dx12

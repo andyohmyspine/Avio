@@ -15,7 +15,7 @@ bool init_rhi(RHI** out_rhi, const infos::RHIInfo& info) {
   switch (info.render_api) {
 #ifdef AVIO_D3D12_AVAILABLE
     case RenderAPI::d3d12: {
-      d3d12_rhi::init_global_rhi_pointers();
+      dx12::init_global_rhi_pointers();
     } break;
 #endif
 

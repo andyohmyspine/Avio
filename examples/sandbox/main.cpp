@@ -33,22 +33,15 @@ void sandbox_main(avio::Engine& engine) {
 int main() {
   avio::Engine engine;
 
-  try {
+  AV_COMMON_CATCH() {
     AV_ASSERT_MSG(avio::init_engine(engine,
-                                    {
-                                        .render_api = avio::RenderAPI::vulkan,
-                                    }),
-                  "Failed to initialize engine!");
+                                   {
+                                       .render_api = avio::RenderAPI::d3d12,
+                                   }),
+                 "Failed to initialize engine!");
     sandbox_main(engine);
+    avio::shutdown_engine(engine);
+  };
 
-  } catch (const avio::Error& error) {
-    AV_LOG(critical, "Exception caught: {}", error.what());
-    return 1;
-  } catch (const std::runtime_error& error) {
-    AV_LOG(critical, "Exception caught: {}", error.what());
-    return 1;
-  }
-
-  avio::shutdown_engine(engine);
   return 0;
 }

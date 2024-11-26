@@ -9,7 +9,11 @@
 #include <vulkan/vulkan_xlib.h>
 #endif
 
-namespace avio {
+#ifdef __APPLE__
+#include <vulkan/vulkan_macos.h>
+#endif
+
+namespace avio::vulkan {
 
 RhiSurface* vulkan_create_surface(RHI* rhi, const infos::RhiSurfaceInfo& info) {
   RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
@@ -32,14 +36,14 @@ RhiSurface* vulkan_create_surface(RHI* rhi, const infos::RhiSurfaceInfo& info) {
                                     &vk_surface));
 // ------ LINUX -----------
 #elif defined(__linux__)
-VkXlibSurfaceCreateInfo create_info {
-  .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
-  .pNext = nullptr,
-  .flags = 0,
-};
+  VkXlibSurfaceCreateInfo create_info{
+      .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+      .pNext = nullptr,
+      .flags = 0,
+  };
 
 // ------ MAC -----------
-#elif defined(__APPLE__) 
+#elif defined(__APPLE__)
 
 #endif
 
