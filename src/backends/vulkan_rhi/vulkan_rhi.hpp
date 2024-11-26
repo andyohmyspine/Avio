@@ -2,6 +2,7 @@
 
 #include "vulkan_common.hpp"
 #include "vulkan_surface.hpp"
+#include "vulkan_swapchain.hpp"
 
 #include "rhi.hpp"
 
@@ -38,6 +39,7 @@ namespace avio::vulkan {
     vk::Queue graphics_queue;
 
     ArrayPool<VulkanSurface, 16> surfaces;
+    ArrayPool<VulkanSwapchain, 16> swapchains;
   };
 
   extern RhiVulkan g_rhi_vulkan;

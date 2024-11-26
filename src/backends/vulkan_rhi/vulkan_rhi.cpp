@@ -1,5 +1,6 @@
 #include "vulkan_rhi.hpp"
 #include "vulkan_surface.hpp"
+#include "vulkan_swapchain.hpp"
 
 #include <array>
 #include <ranges>
@@ -319,6 +320,11 @@ namespace avio::vulkan {
     // Surface functions
     rhi_create_surface = vulkan_create_surface;
     rhi_destroy_surface = vulkan_destroy_surface;
+
+    // Swapchain functions
+    rhi_create_swapchain = vulkan_create_swapchain;
+    rhi_destroy_swapchain = vulkan_destroy_swapchain;
+    rhi_present_swapchain = vulkan_present_swapchain;
   }
 
 }  // namespace avio::vulkan

@@ -45,8 +45,8 @@ namespace avio {
     return (T*)get_rhi();
   }
 
-  template <typename T>
-  inline T* cast_rhi(RHI* rhi) {
+  template <typename T, typename U>
+  inline T* cast_rhi(U* rhi) {
     return (T*)rhi;
   }
 
