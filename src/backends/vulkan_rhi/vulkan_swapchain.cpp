@@ -29,7 +29,7 @@ namespace avio::vulkan {
 
     return {};
   }
-  
+
   // ---------------------------------------------------------------------------------------------
   static vk::PresentModeKHR pick_present_mode(RhiVulkan* vulkan, const VulkanSurface* surface, bool vsync) {
     const auto present_modes = vulkan->physical_device.device.getSurfacePresentModesKHR(surface->vulkan_surface);
@@ -81,7 +81,7 @@ namespace avio::vulkan {
   }
 
   // ---------------------------------------------------------------------------------------------
-  static void swapchain_acquire_next_image(RhiVulkan* rhi, VulkanSwapchain* swapchain) {
+  void swapchain_acquire_next_image(RhiVulkan* rhi, VulkanSwapchain* swapchain) {
     vk::Semaphore sem_to_signal = get_image_ready_semaphore(swapchain, swapchain->current_image_index);
     uint32_t new_image_index =
         rhi->device.acquireNextImageKHR(swapchain->swapchain, UINT64_MAX, sem_to_signal, VK_NULL_HANDLE).value;
@@ -89,34 +89,16 @@ namespace avio::vulkan {
     vulkan_add_submit_wait_semaphore(
         rhi,
         WaitSemaphore{.semaphore = sem_to_signal, .wait_dst_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput});
-
-    vk::ImageMemoryBarrier transition{};
-    transition.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead)
-        .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
-        .setOldLayout(vk::ImageLayout::eUndefined)
-        .setNewLayout(vk::ImageLayout::eColorAttachmentOptimal)
-        .setSrcQueueFamilyIndex(rhi->physical_device.queue_indices.graphics)
-        .setDstQueueFamilyIndex(rhi->physical_device.queue_indices.graphics)
-        .setImage(swapchain->images[swapchain->current_image_index])
-        .setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
-    rhi->command_buffers[rhi->base.current_frame_in_flight].pipelineBarrier(
-      vk::PipelineStageFlagBits::eColorAttachmentOutput,
-      vk::PipelineStageFlagBits::eColorAttachmentOutput,
-      vk::DependencyFlagBits::eByRegion,
-      {},
-      {},
-      transition
-    );
   }
 
   // ---------------------------------------------------------------------------------------------
   static void create_swapchain_image_views(RhiVulkan* vulkan, VulkanSwapchain* swapchain) {
-    if(swapchain->has_more_than_default_images) {
+    if (swapchain->has_more_than_default_images) {
       swapchain->images.assign(vulkan->device.getSwapchainImagesKHR(swapchain->swapchain));
     } else {
       swapchain->images.set_is_array();
       auto images = vulkan->device.getSwapchainImagesKHR(swapchain->swapchain);
-      for(uint32_t index = 0; index < (uint32_t)images.size(); ++index) {
+      for (uint32_t index = 0; index < (uint32_t)images.size(); ++index) {
         swapchain->images.get_array()[index] = images[index];
       }
     }
@@ -161,9 +143,6 @@ namespace avio::vulkan {
     create_swapchain_semaphores(vulkan, out_swapchain);
 
     create_swapchain_image_views(vulkan, out_swapchain);
-
-    // Acquire the first image of the swapchain. This should be the last call.
-    swapchain_acquire_next_image(vulkan, out_swapchain);
     return &out_swapchain->base;
   }
 
@@ -206,7 +185,6 @@ namespace avio::vulkan {
 
     std::span<vk::Semaphore> present_wait_semaphores = vulkan_get_present_wait_semaphores(vulkan);
     // std::span<vk::Semaphore> present_wait_semaphores = {};
- 
 
     vk::PresentInfoKHR present_info{};
     uint32_t image_index = vk_sc->current_image_index;
@@ -217,7 +195,6 @@ namespace avio::vulkan {
     switch (present_result) {
       case vk::Result::eSuccess: {
         vk_sc->current_image_index = (vk_sc->current_image_index + 1) % vk_sc->image_count;
-        swapchain_acquire_next_image(vulkan, vk_sc);  // Uncomment when everything is ready
       } break;
       default:
         throw Error("Pressent failed: {}", vk::to_string(present_result));

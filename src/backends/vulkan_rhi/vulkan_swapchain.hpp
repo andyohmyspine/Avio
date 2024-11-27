@@ -25,4 +25,5 @@ namespace avio::vulkan {
   RhiSwapchain* vulkan_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info);
   void vulkan_destroy_swapchain(RHI* rhi, RhiSwapchain* swapchain);
   void vulkan_present_swapchain(RHI* rhi, RhiSwapchain* swapchain);
+  void swapchain_acquire_next_image(RhiVulkan* rhi, VulkanSwapchain* swapchain);
 }  // namespace avio::vulkan

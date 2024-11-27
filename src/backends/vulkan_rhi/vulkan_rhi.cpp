@@ -1,4 +1,5 @@
 #include "vulkan_rhi.hpp"
+#include "vulkan_render_commands.hpp"
 #include "vulkan_surface.hpp"
 #include "vulkan_swapchain.hpp"
 
@@ -115,7 +116,6 @@ namespace avio::vulkan {
   static void create_rhi_sync(RhiVulkan* vulkan, const infos::RHIInfo& info) {
     for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
       vulkan->render_finished_semaphores[index] = vulkan->device.createSemaphore({});
-
       vk::FenceCreateInfo fence_create_info{};
       fence_create_info.setFlags(vk::FenceCreateFlagBits::eSignaled);
       vulkan->in_flight_fences[index] = vulkan->device.createFence(fence_create_info);
@@ -392,10 +392,13 @@ namespace avio::vulkan {
     vulkan->graphics_queue.submit(submit_info, vulkan->in_flight_fences.at(rhi->current_frame_in_flight));
     vulkan->submit_wait_semaphores[current_frame_in_flight].clear();
     vulkan->submit_wait_stage_masks[current_frame_in_flight].clear();
+  }
 
-    // This happens at the end of the frame
-    rhi->current_frame_in_flight = (rhi->current_frame_in_flight + 1) % RHI_NUM_FRAMES_IN_FLIGHT;
-    current_frame_in_flight = rhi->current_frame_in_flight;
+  static void vulkan_begin_frame(RHI* rhi) {
+    AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
+    rhi->has_began_frame = true;
+    auto vulkan = cast_rhi<RhiVulkan>(rhi);
+    auto current_frame_in_flight = rhi->current_frame_in_flight;
 
     // Wait for the next frame to be done
     VK_ASSERT(vulkan->device.waitForFences(vulkan->in_flight_fences[current_frame_in_flight], VK_TRUE, UINT64_MAX));
@@ -407,12 +410,31 @@ namespace avio::vulkan {
     // open next command list
     vk::CommandBufferBeginInfo begin_info{};
     vulkan->command_buffers[rhi->current_frame_in_flight].begin(begin_info);
+
+    // Acquire all swapchain images
+    for (VulkanSwapchain& swapchain : vulkan->swapchains.objects) {
+      if (swapchain.swapchain) {
+        swapchain_acquire_next_image(vulkan, &swapchain);
+      }
+    }
+  }
+
+  static void vulkan_end_frame(RHI* rhi) {
+    AV_ASSERT_MSG(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
+    rhi->has_began_frame = false;
+
+    auto vulkan = cast_rhi<RhiVulkan>(rhi);
+
+    // This happens at the end of the frame
+    rhi->current_frame_in_flight = (rhi->current_frame_in_flight + 1) % RHI_NUM_FRAMES_IN_FLIGHT;
   }
 
   void init_global_rhi_pointers() {
     // Default functions
     get_rhi = get_rhi_vulkan;
     rhi_submit_frame = vulkan_rhi_submit_frame;
+    rhi_begin_frame = vulkan_begin_frame;
+    rhi_end_frame = vulkan_end_frame;
 
     // Surface functions
     rhi_create_surface = vulkan_create_surface;
@@ -422,6 +444,8 @@ namespace avio::vulkan {
     rhi_create_swapchain = vulkan_create_swapchain;
     rhi_destroy_swapchain = vulkan_destroy_swapchain;
     rhi_present_swapchain = vulkan_present_swapchain;
+
+    detail::init_cmd_pointers();
   }
 
 }  // namespace avio::vulkan

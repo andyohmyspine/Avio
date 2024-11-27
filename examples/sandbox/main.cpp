@@ -18,16 +18,24 @@ void sandbox_main(avio::Engine& engine) {
 #endif
   };
 
-  avio::RhiSurface* surface =
-      avio::rhi_create_surface(engine.rhi, surface_info);
-  avio::RhiSwapchain* swapchain = avio::rhi_create_swapchain(
-      engine.rhi, {.surface = surface, .allow_vsync = false});
+  avio::RhiSurface* surface = avio::rhi_create_surface(engine.rhi, surface_info);
+  avio::RhiSwapchain* swapchain = avio::rhi_create_swapchain(engine.rhi, {.surface = surface, .allow_vsync = false});
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
 
-    avio::rhi_submit_frame(engine.rhi);
-    avio::rhi_present_swapchain(engine.rhi, swapchain);
+    avio::rhi_begin_frame(engine.rhi);
+    {
+      {
+        avio::rhi_cmd_begin_draw_to_swapchain(engine.rhi, swapchain);
+
+        avio::rhi_cmd_end_draw_to_swapchain(engine.rhi, swapchain);
+      }
+
+      avio::rhi_submit_frame(engine.rhi);
+      avio::rhi_present_swapchain(engine.rhi, swapchain);
+    }
+    avio::rhi_end_frame(engine.rhi);
   }
 
   avio::rhi_destroy_swapchain(engine.rhi, swapchain);

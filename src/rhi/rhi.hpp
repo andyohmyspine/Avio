@@ -1,18 +1,25 @@
 #pragma once
 
 #include "core.hpp"
+#include "rhi_render_commands.hpp"
 #include "rhi_render_surface.hpp"
 #include "rhi_swapchain.hpp"
 
+
 #include <array>
+
+#ifndef RHI_FUNC_PTR
+#define RHI_FUNC_PTR(name, signature)      \
+  using AV_PASTE2(PFN_, name) = signature; \
+  inline AV_PASTE2(PFN_, name) name;
+#endif
 
 namespace avio {
 
   inline constexpr uint32_t RHI_NUM_FRAMES_IN_FLIGHT = 2;
 
-  template<typename T>
+  template <typename T>
   using InFlightArray = std::array<T, RHI_NUM_FRAMES_IN_FLIGHT>;
-
 
   enum class RenderAPI {
 #ifdef AVIO_D3D12_AVAILABLE
@@ -37,16 +44,18 @@ namespace avio {
  */
   struct RHI {
     uint32_t current_frame_in_flight = 0;
-
     bool (*init_impl)(RHI* rhi, const infos::RHIInfo& info);
     void (*shutdown_impl)(RHI* rhi);
+
+    bool has_began_frame : 1 = false;
   };
 
   bool init_rhi(RHI** out_rhi, const infos::RHIInfo& info);
   void shutdown_rhi(RHI* rhi);
 
-  using PFN_get_rhi = RHI* (*)();
-  inline PFN_get_rhi get_rhi;
+  RHI_FUNC_PTR(get_rhi, RHI* (*)());
+  RHI_FUNC_PTR(rhi_begin_frame, void (*)(RHI* rhi));
+  RHI_FUNC_PTR(rhi_end_frame, void (*)(RHI* rhi));
 
   template <typename T>
   extern T* get_rhi_as() {

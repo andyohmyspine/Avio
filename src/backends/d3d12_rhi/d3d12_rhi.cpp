@@ -1,5 +1,6 @@
 #include "d3d12_rhi.hpp"
 #include "d3d12_surface.hpp"
+#include "d3d12_render_commands.hpp"
 
 namespace avio::dx12 {
 
@@ -197,9 +198,22 @@ namespace avio::dx12 {
     }
   }
 
+  static void d3d12_begin_frame(RHI* rhi) {
+    AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
+    rhi->has_began_frame = true;
+  }
+
+  static void d3d12_end_frame(RHI* rhi) {
+    AV_ASSERT_MSG(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
+    rhi->has_began_frame = false;
+  }
+
+
   void init_global_rhi_pointers() {
     get_rhi = get_rhi_d3d12;
     rhi_submit_frame = d3d12_rhi_submit_frame;
+    rhi_begin_frame = d3d12_begin_frame;
+    rhi_end_frame = d3d12_end_frame;
 
     // Surface pointers
     rhi_create_surface = d3d12_create_surface;
@@ -209,6 +223,8 @@ namespace avio::dx12 {
     rhi_create_swapchain = d3d12_create_swapchain;
     rhi_destroy_swapchain = d3d12_destroy_swapchain;
     rhi_present_swapchain = d3d12_present_swapchain;
+
+    detail::init_cmd_pointers();
   }
 
 }  // namespace avio::dx12
