@@ -23,17 +23,23 @@ namespace avio {
     }
 
     inline auto& get_array() { return std::get<std::array<T, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>>(data); }
-    inline void set_is_array() { data = std::array<T, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>(); }
+    inline void set_is_array() {
+      data = std::array<T, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>();
+      uses_vector = false;
+    }
 
     inline auto& get_vector() { return std::get<std::vector<T>>(data); }
-    inline void set_is_vector() { data = std::vector<T>(); }
+    inline void set_is_vector() {
+      data = std::vector<T>();
+      uses_vector = true;
+    }
 
     inline T& operator[](size_t index) {
       if (uses_vector) {
-        return std::get<std::vector<T>>(data)[index];
+        return get_vector()[index];
       }
 
-      return std::get<std::array<T, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>>(data)[index];
+      return get_array()[index];
     }
 
     inline const T& operator[](size_t index) const {
@@ -42,6 +48,11 @@ namespace avio {
       }
 
       return std::get<std::array<T, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>>(data)[index];
+    }
+
+    inline auto begin() { return uses_vector ? get_vector().data : get_array().data; }
+    inline auto end() {
+      return uses_vector ? get_vector().data = get_vector().size() : get_array().data + get_array().size;
     }
   };
 

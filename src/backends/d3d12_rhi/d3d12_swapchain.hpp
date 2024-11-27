@@ -9,6 +9,9 @@ namespace avio::dx12 {
 
     IDXGISwapChain4* swapchain;
     uint32_t current_back_buffer_index{};
+    uint32_t image_count{};
+
+    PerImageArray<ID3D12Resource*> swapchain_images{};
   };
 
   RhiSwapchain* d3d12_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info);

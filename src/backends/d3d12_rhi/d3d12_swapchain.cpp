@@ -3,6 +3,8 @@
 
 namespace avio::dx12 {
   
+  static void acquire_swapchain_images(RhiD3D12* d3d12, RhiSwapchain* swapchain);
+
   RhiSwapchain* d3d12_create_swapchain(RHI* rhi,
                                        const infos::RhiSwapchainInfo& info) {
     RhiD3D12* d3d12 = cast_rhi<RhiD3D12>(rhi);
@@ -22,6 +24,8 @@ namespace avio::dx12 {
     desc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     desc.Flags = info.allow_vsync ? 0 : DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 
+    out_swapchain->image_count = desc.BufferCount;
+
     IDXGISwapChain1* swap_chain = {};
     HR_ASSERT(d3d12->dxgi_factory->CreateSwapChainForHwnd(
       d3d12->graphics_queue,
@@ -35,7 +39,25 @@ namespace avio::dx12 {
     HR_ASSERT(swap_chain->QueryInterface(&out_swapchain->swapchain));
     swap_chain->Release();
 
+    acquire_swapchain_images(d3d12, &out_swapchain->base);
+
     return &out_swapchain->base;
+  }
+
+  void acquire_swapchain_images(RhiD3D12* d3d12, RhiSwapchain* swapchain) {
+    D3D12Swapchain* d3d12_sc = cast_rhi<D3D12Swapchain>(swapchain);
+    const bool has_more_than_default_images = d3d12_sc->image_count > RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT;
+
+    if(has_more_than_default_images) {
+      d3d12_sc->swapchain_images.set_is_vector();
+      d3d12_sc->swapchain_images.get_vector().resize(d3d12_sc->image_count);
+    } else {
+      d3d12_sc->swapchain_images.set_is_array();
+    }
+
+    for(uint32_t index = 0; index < d3d12_sc->image_count; ++index) {
+      HR_ASSERT(d3d12_sc->swapchain->GetBuffer(index, IID_PPV_ARGS(&d3d12_sc->swapchain_images[index])));
+    }
   }
   
   void d3d12_destroy_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
