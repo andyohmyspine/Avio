@@ -1,0 +1,8 @@
+{
+  // Debugging config for vscode.
+  "cmake.debugConfig": {
+    "args":[
+      // Enter any args here, make sure not to commit them
+    ]
+  }
+}

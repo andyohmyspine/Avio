@@ -26,21 +26,4 @@ Don't forget to destroy it once you're done with it:
 avio::shutdown_engine(engine);
 ```
 
-Then you can create a window and window surface.
-
-GLFW example:
-```c++
-avio::infos::RhiSurfaceInfo surface_info {
-#ifdef WIN32
-  .hwnd = glfwGetWin32Window(window),
-#endif
-  };
-
-  avio::RhiSurface* surface = avio::rhi_create_surface(engine.rhi, surface_info);
-
-```
-
-Destroy:
-```c++
-  avio::rhi_destroy_surface(engine.rhi, surface);
-```
+See ```examples/sandbox/main.cpp``` for example.
