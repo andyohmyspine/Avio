@@ -12,6 +12,7 @@ namespace avio::dx12 {
     return {d3d12, get_current_command_list(d3d12)};
   }
 
+  // -------------------------------------------------------------------------------------
   void d3d12_cmd_begin_draw_to_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
     auto [d3d12, cmd] = get_cmd(rhi);
     auto d3d12_sc = cast_rhi<D3D12Swapchain>(swapchain);
@@ -23,6 +24,7 @@ namespace avio::dx12 {
     cmd->ResourceBarrier(1, &transition);
   }
 
+  // -------------------------------------------------------------------------------------
   void d3d12_cmd_end_draw_to_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
     auto [d3d12, cmd] = get_cmd(rhi);
     auto d3d12_sc = cast_rhi<D3D12Swapchain>(swapchain);
@@ -34,6 +36,7 @@ namespace avio::dx12 {
     cmd->ResourceBarrier(1, &transition);
   }
 
+  // -------------------------------------------------------------------------------------
   void detail::init_cmd_pointers() {
     rhi_cmd_begin_draw_to_swapchain = d3d12_cmd_begin_draw_to_swapchain;
     rhi_cmd_end_draw_to_swapchain = d3d12_cmd_end_draw_to_swapchain;
