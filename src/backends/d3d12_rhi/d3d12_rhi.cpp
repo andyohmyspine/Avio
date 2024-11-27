@@ -181,6 +181,10 @@ namespace avio::dx12 {
     }
   }
 
+  ID3D12GraphicsCommandList4* get_current_command_list(RhiD3D12* rhi) {
+    return rhi->command_lists[rhi->base.current_frame_in_flight];
+  }
+
   static void d3d12_begin_frame(RHI* rhi) {
     AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
     rhi->has_began_frame = true;

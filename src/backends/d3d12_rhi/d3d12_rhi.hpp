@@ -33,6 +33,7 @@ namespace avio::dx12 {
   };
 
   void d3d12_flush_command_queue(RhiD3D12* rhi);
+  ID3D12GraphicsCommandList4* get_current_command_list(RhiD3D12* rhi);
 
   extern RhiD3D12 g_rhi_d3d12;
 
