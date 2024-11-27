@@ -86,6 +86,8 @@ namespace avio::vulkan {
     vk::Semaphore sem_to_signal = get_image_ready_semaphore(swapchain, swapchain->current_image_index);
     uint32_t new_image_index = rhi->device.acquireNextImageKHR(swapchain->swapchain, UINT64_MAX, sem_to_signal, VK_NULL_HANDLE).value;
     swapchain->current_image_index = (uint8_t)new_image_index;
+
+    vulkan_add_submit_wait_semaphore(rhi, WaitSemaphore {.semaphore = sem_to_signal, .wait_dst_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput});
   }
 
   RhiSwapchain* vulkan_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info) {
@@ -136,6 +138,10 @@ namespace avio::vulkan {
 
     vulkan->device.waitIdle();
 
+    for(uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
+      vulkan->device.destroy(vulkan->command_pools[index]);
+    }
+
     // Clear semaphores
     if (vk_sc->has_more_than_default_images) {
       auto& semaphores = std::get<std::vector<vk::Semaphore>>(vk_sc->image_ready_semaphores);
@@ -162,8 +168,8 @@ namespace avio::vulkan {
     RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
     VulkanSwapchain* vk_sc = cast_rhi<VulkanSwapchain>(swapchain);
 
-    // std::span<vk::Semaphore> present_wait_semaphores = vulkan_get_present_wait_semaphores(vulkan);
-    std::span<vk::Semaphore> present_wait_semaphores = {};
+    std::span<vk::Semaphore> present_wait_semaphores = vulkan_get_present_wait_semaphores(vulkan);
+    // std::span<vk::Semaphore> present_wait_semaphores = {};
 
     vk::PresentInfoKHR present_info{};
 
@@ -171,7 +177,6 @@ namespace avio::vulkan {
     present_info.setWaitSemaphores(present_wait_semaphores)
         .setSwapchains(vk_sc->swapchain)
         .setImageIndices(image_index);
-
     vk::Result present_result = vulkan->graphics_queue.presentKHR(present_info);
     switch (present_result) {
       case vk::Result::eSuccess: {

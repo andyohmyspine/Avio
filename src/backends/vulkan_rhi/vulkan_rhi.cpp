@@ -112,14 +112,18 @@ namespace avio::vulkan {
   static void create_rhi_sync(RhiVulkan* vulkan, const infos::RHIInfo& info) {
     for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
       vulkan->render_finished_semaphores[index] = vulkan->device.createSemaphore({});
+
+      vk::FenceCreateInfo fence_create_info {};
+      fence_create_info.setFlags(vk::FenceCreateFlagBits::eSignaled);
+      vulkan->in_flight_fences[index] = vulkan->device.createFence(fence_create_info);
     }
   }
 
   // ---------------------------------------------------------------------------------------------
   static void create_vulkan_instance(RhiVulkan* vulkan, const infos::RHIInfo& info);
   static void pick_suitable_physical_device(RhiVulkan* vulkan, const infos::RHIInfo& info);
-
   static void create_vulkan_device(RhiVulkan* vulkan, const infos::RHIInfo& info);
+  static void create_vulkan_command_block(RhiVulkan* vulkan, const infos::RHIInfo& info);
 
   bool vulkan_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
     auto vulkan = cast_rhi<RhiVulkan>(rhi);
@@ -133,6 +137,9 @@ namespace avio::vulkan {
 
     create_vulkan_device(vulkan, info);
     create_rhi_sync(vulkan, info);
+
+    // Create command block
+    create_vulkan_command_block(vulkan, info);
 
     return true;
   }
@@ -163,10 +170,6 @@ namespace avio::vulkan {
     vulkan->instance.destroy();
 
     AV_LOG(info, "Vulkan RHI terminated.");
-  }
-
-  static void vulkan_rhi_submit_frame(RHI* rhi) {
-
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -280,6 +283,30 @@ namespace avio::vulkan {
       throw Error("Failed to pick valid vulkan physical device.");
     }
   }
+  
+  // ---------------------------------------------------------------------------------------------
+  static void create_vulkan_command_block(RhiVulkan* vulkan, const infos::RHIInfo& info) {
+    // Create command pools
+    vk::CommandPoolCreateInfo pool_info {};
+    pool_info.setQueueFamilyIndex(vulkan->physical_device.queue_indices.graphics);
+
+    for(uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
+      vulkan->command_pools[index] = vulkan->device.createCommandPool(pool_info);
+    
+      vk::CommandBufferAllocateInfo alloc_info{};
+      alloc_info.setCommandPool(vulkan->command_pools[index])
+        .setLevel(vk::CommandBufferLevel::ePrimary)
+        .setCommandBufferCount(1);
+
+      VK_ASSERT(vulkan->device.allocateCommandBuffers(&alloc_info, &vulkan->command_buffers[index]));
+    }
+
+    // Begin first command buffer
+    vulkan->device.resetCommandPool(vulkan->command_pools[0]);
+
+    vk::CommandBufferBeginInfo begin_info{};
+    vulkan->command_buffers[0].begin(begin_info);
+  }
 
   // ---------------------------------------------------------------------------------------------
   void create_vulkan_device(RhiVulkan* vulkan, const infos::RHIInfo& info) {
@@ -309,10 +336,59 @@ namespace avio::vulkan {
     return &g_rhi_vulkan.base;
   }
 
+  // ---------------------------------------------------------------------------------------------
   std::span<vk::Semaphore> vulkan_get_present_wait_semaphores(RhiVulkan* vulkan) {
     return std::span<vk::Semaphore>(
       &vulkan->render_finished_semaphores[vulkan->base.current_frame_in_flight],
       1 /* Select only single semaphore for now. */);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  vk::CommandBuffer get_current_command_buffer(const RhiVulkan* rhi) {
+    return rhi->command_buffers.at(rhi->base.current_frame_in_flight);
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  void vulkan_add_submit_wait_semaphore(RhiVulkan* vulkan, const WaitSemaphore& wait_semaphore) {
+    std::lock_guard lck{vulkan->access_mutex};
+    vulkan->submit_wait_semaphores[vulkan->base.current_frame_in_flight].push_back(wait_semaphore.semaphore);
+    vulkan->submit_wait_stage_masks[vulkan->base.current_frame_in_flight].push_back(wait_semaphore.wait_dst_stage);
+  }
+
+   // ---------------------------------------------------------------------------------------------
+  static void vulkan_rhi_submit_frame(RHI* rhi) {
+    RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
+    
+    // Close the current command buffer
+    auto current_frame_in_flight = rhi->current_frame_in_flight;
+    vulkan->command_buffers[rhi->current_frame_in_flight].end();  
+
+    vk::SubmitInfo submit_info {};
+
+    submit_info.setPWaitSemaphores(vulkan->submit_wait_semaphores[current_frame_in_flight].data())
+      .setPWaitDstStageMask(vulkan->submit_wait_stage_masks[current_frame_in_flight].data())
+      .setWaitSemaphoreCount((uint32_t)vulkan->submit_wait_semaphores[current_frame_in_flight].size())
+      .setSignalSemaphores(vulkan->render_finished_semaphores.at(current_frame_in_flight))
+      .setCommandBuffers(vulkan->command_buffers[current_frame_in_flight]);
+
+    vulkan->graphics_queue.submit(submit_info, vulkan->in_flight_fences.at(rhi->current_frame_in_flight));
+    vulkan->submit_wait_semaphores[current_frame_in_flight].clear();
+    vulkan->submit_wait_stage_masks[current_frame_in_flight].clear();
+
+    // This happens at the end of the frame
+    rhi->current_frame_in_flight = (rhi->current_frame_in_flight + 1) % RHI_NUM_FRAMES_IN_FLIGHT;
+    current_frame_in_flight = rhi->current_frame_in_flight;
+
+    // Wait for the next frame to be done
+    VK_ASSERT(vulkan->device.waitForFences(vulkan->in_flight_fences[current_frame_in_flight], VK_TRUE, UINT64_MAX));
+    vulkan->device.resetFences(vulkan->in_flight_fences[current_frame_in_flight]);
+
+    // Reset the command pool
+    vulkan->device.resetCommandPool(vulkan->command_pools[current_frame_in_flight]);
+
+    // open next command list
+    vk::CommandBufferBeginInfo begin_info{};
+    vulkan->command_buffers[rhi->current_frame_in_flight].begin(begin_info);
   }
 
   void init_global_rhi_pointers() {

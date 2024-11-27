@@ -42,7 +42,7 @@ int main() {
   AV_COMMON_CATCH() {
     AV_ASSERT_MSG(avio::init_engine(engine,
                                     {
-                                        .render_api = avio::RenderAPI::d3d12,
+                                        .render_api = avio::RenderAPI::vulkan,
                                     }),
                   "Failed to initialize engine!");
     sandbox_main(engine);
