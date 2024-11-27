@@ -5,6 +5,7 @@
 
 #include <stdexcept>
 
+#define FMT_UNICODE 0
 #include <spdlog/spdlog.h>
 
 #define AV_PASTE(a, b) a##b

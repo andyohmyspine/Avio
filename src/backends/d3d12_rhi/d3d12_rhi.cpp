@@ -20,23 +20,28 @@ namespace avio::dx12 {
   }
 
 #ifdef AVIO_ENABLE_GPU_VALIDATION
-  static void d3d12_message_callback(D3D12_MESSAGE_CATEGORY category, D3D12_MESSAGE_SEVERITY severity,
-                                     D3D12_MESSAGE_ID messsage_id, LPCSTR description, void* context) {
-    switch (severity) {
+#ifdef _MSC_VER
+#define D3D12_CALLBACK_FUNC_ATTR __stdcall
+#else
+#define D3D12_CALLBACK_FUNC_ATTR
+#endif
+  static void D3D12_CALLBACK_FUNC_ATTR d3d12_message_callback(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity,
+                                               D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext) {
+    switch (Severity) {
       case D3D12_MESSAGE_SEVERITY_INFO:
-        AV_LOG(info, "D3D12 Validation: {}", description);
+        AV_LOG(info, "D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_MESSAGE:
-        AV_LOG(trace, "D3D12 Validation: {}", description);
+        AV_LOG(trace, "D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_WARNING:
-        AV_LOG(warn, "D3D12 Validation: {}", description);
+        AV_LOG(warn, "D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_ERROR:
-        AV_LOG(error, "D3D12 Validation: {}", description);
+        AV_LOG(error, "D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_CORRUPTION:
-        AV_LOG(critical, "D3D12 Validation: {}", description);
+        AV_LOG(critical, "D3D12 Validation: {}", pDescription);
         break;
       default:
         break;
@@ -85,7 +90,7 @@ namespace avio::dx12 {
 
 #ifdef AVIO_ENABLE_GPU_VALIDATION
     HR_ASSERT(d3d12->device->QueryInterface(&d3d12->info_queue));
-    d3d12->info_queue->RegisterMessageCallback(&d3d12_message_callback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr,
+    d3d12->info_queue->RegisterMessageCallback(d3d12_message_callback, D3D12_MESSAGE_CALLBACK_FLAG_NONE, nullptr,
                                                nullptr);
 #endif
 

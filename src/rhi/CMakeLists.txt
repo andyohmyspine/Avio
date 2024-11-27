@@ -9,6 +9,7 @@ else()
   set(AVIO_D3D12_AVAILABLE OFF CACHE BOOL "")
 endif()
 
+find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
   set(AVIO_VULKAN_AVAILABLE ON CACHE BOOL "")
 else()
