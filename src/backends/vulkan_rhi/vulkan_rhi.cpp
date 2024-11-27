@@ -6,8 +6,6 @@
 #include <ranges>
 #include <span>
 
-#define AV_REQUIRE_DESCRIPTOR_BUFFERS 0
-
 namespace avio::vulkan {
 
   static bool vulkan_rhi_init(RHI* rhi, const infos::RHIInfo& info);
@@ -25,9 +23,14 @@ namespace avio::vulkan {
   // ---------------------------------------------------------------------------------------------
   static consteval auto get_required_instance_extensions() noexcept {
     return std::array{
-#if defined(WIN32)
         "VK_KHR_surface",
+
+#if defined(WIN32)
         "VK_KHR_win32_surface",
+#endif
+
+#if AV_VK_USE_DYNAMIC_RENDERING
+        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 #endif
 
 #if defined(AVIO_ENABLE_GPU_VALIDATION)
@@ -183,7 +186,7 @@ namespace avio::vulkan {
                         .setApplicationVersion(VK_MAKE_API_VERSION(0, 1, 0, 0))
                         .setPEngineName("AvioEngine")
                         .setEngineVersion(VK_MAKE_API_VERSION(0, 1, 0, 0))
-                        .setApiVersion(VK_API_VERSION_1_1);
+                        .setApiVersion(VK_API_VERSION_1_3);
 
     auto required_extensions = get_required_instance_extensions();
 
@@ -224,6 +227,10 @@ namespace avio::vulkan {
   static consteval auto get_required_device_extensions() noexcept {
     return std::array{
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+
+#if AV_VK_USE_DYNAMIC_RENDERING
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+#endif
 
 #if AV_REQUIRE_DESCRIPTOR_BUFFERS
         VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
@@ -324,8 +331,16 @@ namespace avio::vulkan {
     }
 
     auto required_device_extensions = get_required_device_extensions();
+
     auto create_info =
         vk::DeviceCreateInfo().setPEnabledExtensionNames(required_device_extensions).setQueueCreateInfos(queue_infos);
+
+#if AV_VK_USE_DYNAMIC_RENDERING
+    VkPhysicalDeviceDynamicRenderingFeatures dynamic_rendering_features{};
+    dynamic_rendering_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES;
+    dynamic_rendering_features.dynamicRendering = VK_TRUE;
+    create_info.setPNext(&dynamic_rendering_features);
+#endif
 
     vulkan->device = vulkan->physical_device.device.createDevice(create_info);
     AV_LOG(info, "Vulkan logical device created.");

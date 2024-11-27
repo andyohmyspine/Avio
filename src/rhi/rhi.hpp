@@ -8,7 +8,6 @@
 
 namespace avio {
 
-  inline constexpr uint32_t RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT = 3;
   inline constexpr uint32_t RHI_NUM_FRAMES_IN_FLIGHT = 2;
 
   template<typename T>

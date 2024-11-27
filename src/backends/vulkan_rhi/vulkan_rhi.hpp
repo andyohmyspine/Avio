@@ -10,6 +10,8 @@
 #include <set>
 #include <vector>
 
+#define AV_REQUIRE_DESCRIPTOR_BUFFERS 0
+#define AV_VK_USE_DYNAMIC_RENDERING 1
 
 namespace avio::vulkan {
 
@@ -61,8 +63,19 @@ namespace avio::vulkan {
     InFlightArray<std::vector<vk::PipelineStageFlags>> submit_wait_stage_masks;
   };
 
+  /**
+   * @brief Get the wait semaphores for present
+   */
   std::span<vk::Semaphore> vulkan_get_present_wait_semaphores(RhiVulkan* vulkan);
+
+  /**
+   * @brief Get command buffer for current frame in flight
+   */
   vk::CommandBuffer get_current_command_buffer(const RhiVulkan* rhi);
+
+  /**
+   * @brief Add a semaphores to wait on before submit
+   */
   void vulkan_add_submit_wait_semaphore(RhiVulkan* vulkan, const WaitSemaphore& wait_semaphore);
 
   extern RhiVulkan g_rhi_vulkan;

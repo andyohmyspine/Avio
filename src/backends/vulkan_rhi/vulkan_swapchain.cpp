@@ -29,7 +29,8 @@ namespace avio::vulkan {
 
     return {};
   }
-
+  
+  // ---------------------------------------------------------------------------------------------
   static vk::PresentModeKHR pick_present_mode(RhiVulkan* vulkan, const VulkanSurface* surface, bool vsync) {
     const auto present_modes = vulkan->physical_device.device.getSurfacePresentModesKHR(surface->vulkan_surface);
     if (vsync) {
@@ -47,6 +48,7 @@ namespace avio::vulkan {
     return vk::PresentModeKHR::eFifo;
   }
 
+  // ---------------------------------------------------------------------------------------------
   static void create_swapchain_semaphores(RhiVulkan* vulkan, VulkanSwapchain* swapchain) {
     uint32_t swapchain_image_count = 0;
     VK_ASSERT(vkGetSwapchainImagesKHR(vulkan->device, swapchain->swapchain, &swapchain_image_count, nullptr));
@@ -62,34 +64,65 @@ namespace avio::vulkan {
         semaphores.push_back(semaphore);
       }
 
-      swapchain->image_ready_semaphores = std::move(semaphores);
+      swapchain->image_ready_semaphores.assign(std::move(semaphores));
     } else {
       swapchain->has_more_than_default_images = false;
       std::array<vk::Semaphore, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT> out_pool;
       for (uint8_t index = 0; index < swapchain->image_count; ++index) {
         out_pool[index] = vulkan->device.createSemaphore({});
       }
-      swapchain->image_ready_semaphores = out_pool;
+      swapchain->image_ready_semaphores.assign(std::move(out_pool));
     }
   }
 
+  // ---------------------------------------------------------------------------------------------
   static vk::Semaphore get_image_ready_semaphore(VulkanSwapchain* swapchain, uint8_t index) {
-    if (swapchain->has_more_than_default_images) {
-      return std::get<std::vector<vk::Semaphore>>(swapchain->image_ready_semaphores).at(index);
-    } else {
-      return std::get<std::array<vk::Semaphore, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>>(swapchain->image_ready_semaphores)
-          .at(index);
-    }
+    return swapchain->image_ready_semaphores[index];
   }
 
+  // ---------------------------------------------------------------------------------------------
   static void swapchain_acquire_next_image(RhiVulkan* rhi, VulkanSwapchain* swapchain) {
     vk::Semaphore sem_to_signal = get_image_ready_semaphore(swapchain, swapchain->current_image_index);
-    uint32_t new_image_index = rhi->device.acquireNextImageKHR(swapchain->swapchain, UINT64_MAX, sem_to_signal, VK_NULL_HANDLE).value;
+    uint32_t new_image_index =
+        rhi->device.acquireNextImageKHR(swapchain->swapchain, UINT64_MAX, sem_to_signal, VK_NULL_HANDLE).value;
     swapchain->current_image_index = (uint8_t)new_image_index;
+    vulkan_add_submit_wait_semaphore(
+        rhi,
+        WaitSemaphore{.semaphore = sem_to_signal, .wait_dst_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput});
 
-    vulkan_add_submit_wait_semaphore(rhi, WaitSemaphore {.semaphore = sem_to_signal, .wait_dst_stage = vk::PipelineStageFlagBits::eColorAttachmentOutput});
+    vk::ImageMemoryBarrier transition{};
+    transition.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead)
+        .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
+        .setOldLayout(vk::ImageLayout::eUndefined)
+        .setNewLayout(vk::ImageLayout::eColorAttachmentOptimal)
+        .setSrcQueueFamilyIndex(rhi->physical_device.queue_indices.graphics)
+        .setDstQueueFamilyIndex(rhi->physical_device.queue_indices.graphics)
+        .setImage(swapchain->images[swapchain->current_image_index])
+        .setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+    rhi->command_buffers[rhi->base.current_frame_in_flight].pipelineBarrier(
+      vk::PipelineStageFlagBits::eColorAttachmentOutput,
+      vk::PipelineStageFlagBits::eColorAttachmentOutput,
+      vk::DependencyFlagBits::eByRegion,
+      {},
+      {},
+      transition
+    );
   }
 
+  // ---------------------------------------------------------------------------------------------
+  static void create_swapchain_image_views(RhiVulkan* vulkan, VulkanSwapchain* swapchain) {
+    if(swapchain->has_more_than_default_images) {
+      swapchain->images.assign(vulkan->device.getSwapchainImagesKHR(swapchain->swapchain));
+    } else {
+      swapchain->images.set_is_array();
+      auto images = vulkan->device.getSwapchainImagesKHR(swapchain->swapchain);
+      for(uint32_t index = 0; index < (uint32_t)images.size(); ++index) {
+        swapchain->images.get_array()[index] = images[index];
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------
   RhiSwapchain* vulkan_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info) {
     RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
     VulkanSwapchain* out_swapchain = vulkan->swapchains.allocate();
@@ -127,30 +160,32 @@ namespace avio::vulkan {
     out_swapchain->swapchain = vulkan->device.createSwapchainKHR(create_info);
     create_swapchain_semaphores(vulkan, out_swapchain);
 
-    // Acquire the first image of the swapchain.
-    swapchain_acquire_next_image(vulkan, out_swapchain);
+    create_swapchain_image_views(vulkan, out_swapchain);
 
+    // Acquire the first image of the swapchain. This should be the last call.
+    swapchain_acquire_next_image(vulkan, out_swapchain);
     return &out_swapchain->base;
   }
+
+  // ---------------------------------------------------------------------------------------------
   void vulkan_destroy_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
     RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
     VulkanSwapchain* vk_sc = cast_rhi<VulkanSwapchain>(swapchain);
 
     vulkan->device.waitIdle();
 
-    for(uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
+    for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
       vulkan->device.destroy(vulkan->command_pools[index]);
     }
 
     // Clear semaphores
     if (vk_sc->has_more_than_default_images) {
-      auto& semaphores = std::get<std::vector<vk::Semaphore>>(vk_sc->image_ready_semaphores);
+      auto& semaphores = vk_sc->image_ready_semaphores.get_vector();
       for (vk::Semaphore sem : semaphores) {
         vulkan->device.destroy(sem);
       }
     } else {
-      auto& semaphores =
-          std::get<std::array<vk::Semaphore, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>>(vk_sc->image_ready_semaphores);
+      auto& semaphores = vk_sc->image_ready_semaphores.get_array();
       for (vk::Semaphore sem : semaphores) {
         vulkan->device.destroy(sem);
       }
@@ -164,15 +199,16 @@ namespace avio::vulkan {
     vulkan->swapchains.deallocate(vk_sc);
   }
 
+  // ---------------------------------------------------------------------------------------------
   void vulkan_present_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
     RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
     VulkanSwapchain* vk_sc = cast_rhi<VulkanSwapchain>(swapchain);
 
     std::span<vk::Semaphore> present_wait_semaphores = vulkan_get_present_wait_semaphores(vulkan);
     // std::span<vk::Semaphore> present_wait_semaphores = {};
+ 
 
     vk::PresentInfoKHR present_info{};
-
     uint32_t image_index = vk_sc->current_image_index;
     present_info.setWaitSemaphores(present_wait_semaphores)
         .setSwapchains(vk_sc->swapchain)
