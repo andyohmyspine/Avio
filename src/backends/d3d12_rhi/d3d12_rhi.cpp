@@ -1,6 +1,6 @@
 #include "d3d12_rhi.hpp"
-#include "d3d12_surface.hpp"
 #include "d3d12_render_commands.hpp"
+#include "d3d12_surface.hpp"
 
 namespace avio::dx12 {
 
@@ -144,9 +144,7 @@ namespace avio::dx12 {
                                                  nullptr, IID_PPV_ARGS(&d3d12->command_lists[index])));
 
       // Close all command lists except the first one, because we need it straight away.
-      if (index != 0) {
-        HR_ASSERT(d3d12->command_lists[index]->Close());
-      }
+      HR_ASSERT(d3d12->command_lists[index]->Close());
     }
   }
 
@@ -169,21 +167,6 @@ namespace avio::dx12 {
     signal_frame_in_flight(d3d12);
 
     rhi->current_frame_in_flight = (rhi->current_frame_in_flight + 1) % RHI_NUM_FRAMES_IN_FLIGHT;
-
-    // Synchronize next frame in flight
-    const auto fence_frame_value = d3d12->fence_frame_values[rhi->current_frame_in_flight];
-    if (fence_frame_value != 0 && d3d12->fence->GetCompletedValue() < fence_frame_value) {
-      if (HANDLE event_handle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS)) {
-        HR_ASSERT(d3d12->fence->SetEventOnCompletion(fence_frame_value, event_handle));
-        WaitForSingleObject(event_handle, INFINITE);
-        CloseHandle(event_handle);
-      }
-    }
-
-    // Begin new frame recording
-    HR_ASSERT(d3d12->command_allocators[rhi->current_frame_in_flight]->Reset());
-    HR_ASSERT(d3d12->command_lists[rhi->current_frame_in_flight]->Reset(
-        d3d12->command_allocators[rhi->current_frame_in_flight], nullptr));
   }
 
   void d3d12_flush_command_queue(RhiD3D12* d3d12) {
@@ -201,13 +184,29 @@ namespace avio::dx12 {
   static void d3d12_begin_frame(RHI* rhi) {
     AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
     rhi->has_began_frame = true;
+
+    auto d3d12 = cast_rhi<RhiD3D12>(rhi);
+
+    // Synchronize next frame in flight
+    const auto fence_frame_value = d3d12->fence_frame_values[rhi->current_frame_in_flight];
+    if (fence_frame_value != 0 && d3d12->fence->GetCompletedValue() < fence_frame_value) {
+      if (HANDLE event_handle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS)) {
+        HR_ASSERT(d3d12->fence->SetEventOnCompletion(fence_frame_value, event_handle));
+        WaitForSingleObject(event_handle, INFINITE);
+        CloseHandle(event_handle);
+      }
+    }
+
+    // Begin new frame recording
+    HR_ASSERT(d3d12->command_allocators[rhi->current_frame_in_flight]->Reset());
+    HR_ASSERT(d3d12->command_lists[rhi->current_frame_in_flight]->Reset(
+        d3d12->command_allocators[rhi->current_frame_in_flight], nullptr));
   }
 
   static void d3d12_end_frame(RHI* rhi) {
     AV_ASSERT_MSG(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
     rhi->has_began_frame = false;
   }
-
 
   void init_global_rhi_pointers() {
     get_rhi = get_rhi_d3d12;
