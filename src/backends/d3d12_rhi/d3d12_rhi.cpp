@@ -43,6 +43,9 @@ namespace avio::dx12 {
   }
 #endif
 
+  static void d3d12_create_command_block(RhiD3D12* d3d12);
+  static void d3d12_create_sync(RhiD3D12* d3d12);
+
   bool d3d12_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
     // Create dxgi factory
 #ifndef NDEBUG
@@ -92,11 +95,23 @@ namespace avio::dx12 {
     HR_ASSERT(d3d12->device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&d3d12->graphics_queue)));
     AV_LOG(info, "D3D12 Graphics queue created");
 
+    d3d12_create_command_block(d3d12);
+    d3d12_create_sync(d3d12);
+
     return true;
   }
 
   void d3d12_rhi_shutdown(RHI* rhi) {
     RhiD3D12* d3d12 = cast_rhi<RhiD3D12>(rhi);
+
+    d3d12_flush_command_queue(d3d12);
+
+    for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
+      d3d12->command_allocators[index]->Release();
+      d3d12->command_lists[index]->Release();
+    }
+
+    d3d12->fence->Release();
 
     // Release the graphics queue
     d3d12->graphics_queue->Release();
@@ -119,7 +134,68 @@ namespace avio::dx12 {
     AV_LOG(info, "D3D12 Rhi terminated.");
   }
 
-  static void d3d12_rhi_submit_frame(RHI* rhi) {}
+  void d3d12_create_command_block(RhiD3D12* d3d12) {
+    for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
+      HR_ASSERT(d3d12->device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                                      IID_PPV_ARGS(&d3d12->command_allocators[index])));
+
+      HR_ASSERT(d3d12->device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, d3d12->command_allocators[index],
+                                                 nullptr, IID_PPV_ARGS(&d3d12->command_lists[index])));
+
+      // Close all command lists except the first one, because we need it straight away.
+      if (index != 0) {
+        HR_ASSERT(d3d12->command_lists[index]->Close());
+      }
+    }
+  }
+
+  void d3d12_create_sync(RhiD3D12* d3d12) {
+    HR_ASSERT(d3d12->device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&d3d12->fence)));
+  }
+
+  static void signal_frame_in_flight(RhiD3D12* d3d12) {
+    d3d12->fence_frame_values[d3d12->base.current_frame_in_flight] = ++d3d12->fence_value;
+    HR_ASSERT(d3d12->graphics_queue->Signal(d3d12->fence, d3d12->fence_value));
+  }
+
+  static void d3d12_rhi_submit_frame(RHI* rhi) {
+    auto d3d12 = cast_rhi<RhiD3D12>(rhi);
+    // Close the primary cmd
+    HR_ASSERT(d3d12->command_lists[rhi->current_frame_in_flight]->Close());
+
+    ID3D12CommandList* cmds[] = {d3d12->command_lists[rhi->current_frame_in_flight]};
+    d3d12->graphics_queue->ExecuteCommandLists(_countof(cmds), cmds);
+    signal_frame_in_flight(d3d12);
+
+    rhi->current_frame_in_flight = (rhi->current_frame_in_flight + 1) % RHI_NUM_FRAMES_IN_FLIGHT;
+
+    // Synchronize next frame in flight
+    const auto fence_frame_value = d3d12->fence_frame_values[rhi->current_frame_in_flight];
+    if (fence_frame_value != 0 && d3d12->fence->GetCompletedValue() < fence_frame_value) {
+      if (HANDLE event_handle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS)) {
+        HR_ASSERT(d3d12->fence->SetEventOnCompletion(fence_frame_value, event_handle));
+        WaitForSingleObject(event_handle, INFINITE);
+        CloseHandle(event_handle);
+      }
+    }
+
+    // Begin new frame recording
+    HR_ASSERT(d3d12->command_allocators[rhi->current_frame_in_flight]->Reset());
+    HR_ASSERT(d3d12->command_lists[rhi->current_frame_in_flight]->Reset(
+        d3d12->command_allocators[rhi->current_frame_in_flight], nullptr));
+  }
+
+  void d3d12_flush_command_queue(RhiD3D12* d3d12) {
+    if (HANDLE event_handle = CreateEventEx(nullptr, nullptr, 0, EVENT_ALL_ACCESS)) {
+      d3d12->fence_value++;
+
+      HR_ASSERT(d3d12->graphics_queue->Signal(d3d12->fence, d3d12->fence_value));
+      HR_ASSERT(d3d12->fence->SetEventOnCompletion(d3d12->fence_value, event_handle));
+
+      WaitForSingleObject(event_handle, INFINITE);
+      CloseHandle(event_handle);
+    }
+  }
 
   void init_global_rhi_pointers() {
     get_rhi = get_rhi_d3d12;

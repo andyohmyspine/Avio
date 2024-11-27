@@ -40,6 +40,8 @@ namespace avio::dx12 {
   
   void d3d12_destroy_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
     RhiD3D12* d3d12 = cast_rhi<RhiD3D12>(rhi);
+    d3d12_flush_command_queue(d3d12);
+
     D3D12Swapchain* d3d12_sc = (D3D12Swapchain*)swapchain;
     d3d12_sc->swapchain->Release();
     d3d12->swapchains.deallocate(d3d12_sc);
@@ -51,6 +53,7 @@ namespace avio::dx12 {
     const UINT swap_interval = swapchain->info.allow_vsync ? 1 : 0;
     const UINT flags = swapchain->info.allow_vsync ? 0 : DXGI_PRESENT_ALLOW_TEARING;
     HR_ASSERT(d3d12_sc->swapchain->Present(swap_interval, flags));
+    d3d12_sc->current_back_buffer_index = d3d12_sc->swapchain->GetCurrentBackBufferIndex();
   }
 
 }  // namespace avio::dx12

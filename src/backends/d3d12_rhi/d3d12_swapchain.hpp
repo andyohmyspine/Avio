@@ -7,7 +7,8 @@ namespace avio::dx12 {
   struct D3D12Swapchain {
     RhiSwapchain base;
 
-    IDXGISwapChain2* swapchain;
+    IDXGISwapChain4* swapchain;
+    uint32_t current_back_buffer_index{};
   };
 
   RhiSwapchain* d3d12_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info);

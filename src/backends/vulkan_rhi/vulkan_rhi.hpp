@@ -6,9 +6,10 @@
 
 #include "rhi.hpp"
 
+#include <mutex>
 #include <set>
 #include <vector>
-#include <mutex>
+
 
 namespace avio::vulkan {
 
@@ -17,9 +18,7 @@ namespace avio::vulkan {
 
     inline bool is_valid() const { return graphics != UINT32_MAX; }
 
-    inline std::set<uint32_t> as_unique_set() const noexcept {
-      return {graphics};
-    }
+    inline std::set<uint32_t> as_unique_set() const noexcept { return {graphics}; }
   };
 
   struct WaitSemaphore {
@@ -52,14 +51,14 @@ namespace avio::vulkan {
     // For now we will use the single submit per frame approach, though this isn't the best idea
     // in a long run.
     // So this solution is ok for now.
-    std::array<vk::Semaphore, RHI_NUM_FRAMES_IN_FLIGHT> render_finished_semaphores;
-    std::array<vk::Fence, RHI_NUM_FRAMES_IN_FLIGHT> in_flight_fences;
+    InFlightArray<vk::Semaphore> render_finished_semaphores;
+    InFlightArray<vk::Fence> in_flight_fences;
 
-    std::array<vk::CommandPool, RHI_NUM_FRAMES_IN_FLIGHT> command_pools;
-    std::array<vk::CommandBuffer, RHI_NUM_FRAMES_IN_FLIGHT> command_buffers;
+    InFlightArray<vk::CommandPool> command_pools;
+    InFlightArray<vk::CommandBuffer> command_buffers;
 
-    std::array<std::vector<vk::Semaphore>, RHI_NUM_FRAMES_IN_FLIGHT> submit_wait_semaphores;
-    std::array<std::vector<vk::PipelineStageFlags>, RHI_NUM_FRAMES_IN_FLIGHT> submit_wait_stage_masks;
+    InFlightArray<std::vector<vk::Semaphore>> submit_wait_semaphores;
+    InFlightArray<std::vector<vk::PipelineStageFlags>> submit_wait_stage_masks;
   };
 
   std::span<vk::Semaphore> vulkan_get_present_wait_semaphores(RhiVulkan* vulkan);

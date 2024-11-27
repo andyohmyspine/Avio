@@ -4,10 +4,16 @@
 #include "rhi_render_surface.hpp"
 #include "rhi_swapchain.hpp"
 
+#include <array>
+
 namespace avio {
 
   inline constexpr uint32_t RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT = 3;
   inline constexpr uint32_t RHI_NUM_FRAMES_IN_FLIGHT = 2;
+
+  template<typename T>
+  using InFlightArray = std::array<T, RHI_NUM_FRAMES_IN_FLIGHT>;
+
 
   enum class RenderAPI {
 #ifdef AVIO_D3D12_AVAILABLE
