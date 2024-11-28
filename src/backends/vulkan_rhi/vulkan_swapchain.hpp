@@ -2,6 +2,7 @@
 
 #include "rhi_swapchain.hpp"
 #include "vulkan_common.hpp"
+#include "vulkan_image.hpp"
 
 #include <array>
 #include <variant>
@@ -14,10 +15,12 @@ namespace avio::vulkan {
     vk::SwapchainKHR swapchain;
     vk::SurfaceFormatKHR surface_format;
     vk::PresentModeKHR present_mode;
+    vk::Extent2D extent;
     uint8_t current_image_index{};
     uint8_t image_count{};
     PerImageArray<vk::Semaphore> image_ready_semaphores;
-    PerImageArray<vk::Image> images;
+    PerImageArray<VulkanImage> images;
+    PerImageArray<VulkanImageView> image_views;
 
     bool has_more_than_default_images : 1 = false;
   };

@@ -2,6 +2,7 @@
 
 #include "rhi_swapchain.hpp"
 #include "d3d12_common.hpp"
+#include "d3d12_image.hpp"
 
 namespace avio::dx12 {
   struct D3D12Swapchain {
@@ -11,7 +12,7 @@ namespace avio::dx12 {
     uint32_t current_back_buffer_index{};
     uint32_t image_count{};
 
-    PerImageArray<ID3D12Resource*> swapchain_images{};
+    PerImageArray<D3D12Image> swapchain_images{};
   };
 
   RhiSwapchain* d3d12_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info);

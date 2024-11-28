@@ -164,6 +164,10 @@ namespace avio::vulkan {
       vulkan->device.destroy(semaphore);
     }
 
+    for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
+      vulkan->device.destroy(vulkan->command_pools[index]);
+    }
+
     vulkan->device.destroy();
 
     // Destroy the debug messenger

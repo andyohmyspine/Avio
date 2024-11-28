@@ -30,8 +30,12 @@ namespace avio {
     }
 
     inline auto& get_vector() { return std::get<std::vector<T>>(data); }
-    inline void set_is_vector() {
+    inline void set_is_vector(uint32_t immediate_resize = 0) {
       data = std::vector<T>();
+      if(immediate_resize > 0) {
+        get_vector().resize(immediate_resize);
+      }
+
       uses_vector = true;
     }
 

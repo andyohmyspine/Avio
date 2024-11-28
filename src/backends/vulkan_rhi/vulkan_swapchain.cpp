@@ -93,14 +93,49 @@ namespace avio::vulkan {
 
   // ---------------------------------------------------------------------------------------------
   static void create_swapchain_image_views(RhiVulkan* vulkan, VulkanSwapchain* swapchain) {
+    auto images = vulkan->device.getSwapchainImagesKHR(swapchain->swapchain);
+
     if (swapchain->has_more_than_default_images) {
-      swapchain->images.assign(vulkan->device.getSwapchainImagesKHR(swapchain->swapchain));
+      swapchain->images.set_is_vector(images.size());
+      swapchain->image_views.set_is_vector(images.size());
     } else {
       swapchain->images.set_is_array();
-      auto images = vulkan->device.getSwapchainImagesKHR(swapchain->swapchain);
-      for (uint32_t index = 0; index < (uint32_t)images.size(); ++index) {
-        swapchain->images.get_array()[index] = images[index];
-      }
+      swapchain->image_views.set_is_array();
+    }
+
+    for (uint32_t index = 0; index < swapchain->image_count; ++index) {
+      VulkanImage out_image = {
+          .base =
+              {
+                  .type = ImageType::image_2d,
+                  .width = swapchain->extent.width,
+                  .height = swapchain->extent.height,
+                  .format = PixelFormat::window_output,
+              },
+          .image = images[index],
+          .native_format = swapchain->surface_format.format,
+      };
+      swapchain->images[index] = out_image;
+
+      // Create image view
+      vk::ImageViewCreateInfo view_info{};
+      view_info.setFlags({})
+          .setImage(out_image.image)
+          .setViewType(vk::ImageViewType::e2D)
+          .setFormat(out_image.native_format)
+          .setComponents(vk::ComponentMapping())
+          .setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
+
+      VulkanImageView out_view{
+          .base =
+              {
+                  .image = &swapchain->images[index].base,
+                  .type = ImageViewType::color,
+              },
+          .view = vulkan->device.createImageView(view_info),
+      };
+
+      swapchain->image_views[index] = out_view;
     }
   }
 
@@ -118,6 +153,7 @@ namespace avio::vulkan {
     // Get surface format
     const vk::SurfaceFormatKHR surface_format = pick_surface_format(vulkan, vulkan_surface);
     out_swapchain->surface_format = surface_format;
+    set_pixel_format_mapping(PixelFormat::window_output, surface_format.format);
 
     // Get present mode
     const vk::PresentModeKHR present_mode = pick_present_mode(vulkan, vulkan_surface, info.allow_vsync);
@@ -139,6 +175,7 @@ namespace avio::vulkan {
         .setClipped(false)
         .setOldSwapchain(VK_NULL_HANDLE);
 
+    out_swapchain->extent = create_info.imageExtent;
     out_swapchain->swapchain = vulkan->device.createSwapchainKHR(create_info);
     create_swapchain_semaphores(vulkan, out_swapchain);
 
@@ -153,8 +190,8 @@ namespace avio::vulkan {
 
     vulkan->device.waitIdle();
 
-    for (uint8_t index = 0; index < RHI_NUM_FRAMES_IN_FLIGHT; ++index) {
-      vulkan->device.destroy(vulkan->command_pools[index]);
+    for(auto index = 0; index < vk_sc->image_count; ++index) {
+      vulkan->device.destroy(vk_sc->image_views[index].view);
     }
 
     // Clear semaphores
@@ -184,20 +221,27 @@ namespace avio::vulkan {
     VulkanSwapchain* vk_sc = cast_rhi<VulkanSwapchain>(swapchain);
 
     std::span<vk::Semaphore> present_wait_semaphores = vulkan_get_present_wait_semaphores(vulkan);
-    // std::span<vk::Semaphore> present_wait_semaphores = {};
-
     vk::PresentInfoKHR present_info{};
     uint32_t image_index = vk_sc->current_image_index;
     present_info.setWaitSemaphores(present_wait_semaphores)
         .setSwapchains(vk_sc->swapchain)
         .setImageIndices(image_index);
-    vk::Result present_result = vulkan->graphics_queue.presentKHR(present_info);
-    switch (present_result) {
-      case vk::Result::eSuccess: {
-        vk_sc->current_image_index = (vk_sc->current_image_index + 1) % vk_sc->image_count;
-      } break;
-      default:
-        throw Error("Pressent failed: {}", vk::to_string(present_result));
+
+    vk::Result present_result{};
+    try {
+      present_result = vulkan->graphics_queue.presentKHR(present_info);
+      switch (present_result) {
+        case vk::Result::eSuccess: {
+          vk_sc->current_image_index = (vk_sc->current_image_index + 1) % vk_sc->image_count;
+        } break;
+        default:
+          throw Error("Pressent failed: {}", vk::to_string(present_result));
+      }
+    } catch (const vk::OutOfDateKHRError& error) {
+      throw Error("Resizing swapchain is currently unsupported in vulkan. Pressent failed: {}",
+                  vk::to_string(present_result));
+    } catch (...) {
+      throw;
     }
   }
 }  // namespace avio::vulkan

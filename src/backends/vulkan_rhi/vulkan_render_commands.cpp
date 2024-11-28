@@ -18,7 +18,7 @@ namespace avio::vulkan {
     auto vk_sc = cast_rhi<VulkanSwapchain>(swapchain);
 
     // Transition swapchain image
-    vk::Image image = vk_sc->images[vk_sc->current_image_index];
+    VulkanImage& image = vk_sc->images[vk_sc->current_image_index];
     vk::ImageMemoryBarrier transition{};
     transition.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead)
         .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
@@ -26,11 +26,30 @@ namespace avio::vulkan {
         .setNewLayout(vk::ImageLayout::eColorAttachmentOptimal)
         .setSrcQueueFamilyIndex(vulkan->physical_device.queue_indices.graphics)
         .setDstQueueFamilyIndex(vulkan->physical_device.queue_indices.graphics)
-        .setImage(image)
+        .setImage(image.image)
         .setSubresourceRange(vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1));
     cmd.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput,
                         vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::DependencyFlagBits::eByRegion, {}, {},
                         transition);
+
+#if AV_VK_USE_DYNAMIC_RENDERING
+    vk::RenderingAttachmentInfo image_attachment {};
+    image_attachment.setImageView(vk_sc->image_views[vk_sc->current_image_index].view)
+      .setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
+      .setLoadOp(vk::AttachmentLoadOp::eClear)
+      .setStoreOp(vk::AttachmentStoreOp::eStore)
+      .setClearValue(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
+
+    vk::RenderingInfoKHR rendering_info{};
+    rendering_info.setFlags({})
+      .setRenderArea(vk::Rect2D({0, 0}, {image.base.width, image.base.height}))
+      .setLayerCount(1)
+      .setViewMask(0)
+      .setColorAttachmentCount(1)
+      .setColorAttachments(image_attachment);
+
+    cmd.beginRendering(rendering_info); // Uncomment when implemented
+#endif
   }
 
   // -------------------------------------------------------------------------------------------
@@ -38,7 +57,9 @@ namespace avio::vulkan {
     auto [vulkan, cmd] = get_cmd(rhi);
     auto vk_sc = cast_rhi<VulkanSwapchain>(swapchain);
 
-    vk::Image image = vk_sc->images[vk_sc->current_image_index];
+    cmd.endRendering();
+
+    vk::Image image = vk_sc->images[vk_sc->current_image_index].image;
     vk::ImageMemoryBarrier transition{};
     transition.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite)
         .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead)

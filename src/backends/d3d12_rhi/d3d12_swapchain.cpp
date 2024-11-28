@@ -54,9 +54,23 @@ namespace avio::dx12 {
     } else {
       d3d12_sc->swapchain_images.set_is_array();
     }
-
+    
+    // Get the desc so we can get the width and height of the image
+    DXGI_SWAP_CHAIN_DESC1 desc {};
+    HR_ASSERT(d3d12_sc->swapchain->GetDesc1(&desc));
     for(uint32_t index = 0; index < d3d12_sc->image_count; ++index) {
-      HR_ASSERT(d3d12_sc->swapchain->GetBuffer(index, IID_PPV_ARGS(&d3d12_sc->swapchain_images[index])));
+      D3D12Image out_image = {
+        .base {
+          .type = ImageType::image_2d,
+          .width = desc.Width,
+          .height = desc.Height,
+          .format = PixelFormat::window_output,
+        },
+        .native_format = desc.Format,
+      };
+      
+      HR_ASSERT(d3d12_sc->swapchain->GetBuffer(index, IID_PPV_ARGS(&out_image.image)));
+      d3d12_sc->swapchain_images[index] = out_image;
     }
   }
   
