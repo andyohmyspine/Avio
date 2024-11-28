@@ -4,15 +4,9 @@
 #include "rhi_render_commands.hpp"
 #include "rhi_render_surface.hpp"
 #include "rhi_swapchain.hpp"
-
+#include "rhi_types.hpp"
 
 #include <array>
-
-#ifndef RHI_FUNC_PTR
-#define RHI_FUNC_PTR(name, signature)      \
-  using AV_PASTE2(PFN_, name) = signature; \
-  inline AV_PASTE2(PFN_, name) name;
-#endif
 
 namespace avio {
 

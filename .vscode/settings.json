@@ -4,5 +4,9 @@
     "args":[
       // Enter any args here, make sure not to commit them
     ]
+  },
+  "files.associations": {
+    "*.glsli": "glsl",
+    "xutility": "cpp"
   }
 }

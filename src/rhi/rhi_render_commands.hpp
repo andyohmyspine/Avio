@@ -1,15 +1,13 @@
 #pragma once
 
 #include "core.hpp"
+#include "rhi_types.hpp"
 
 namespace avio {
 
   struct RHI;
   struct RhiSwapchain;
 
-  using PFN_rhi_cmd_begin_draw_to_swapchain = void(*)(RHI* rhi, RhiSwapchain* swapchain);
-  inline PFN_rhi_cmd_begin_draw_to_swapchain rhi_cmd_begin_draw_to_swapchain;
-
-  using PFN_rhi_cmd_end_draw_to_swapchain = void(*)(RHI* rhi, RhiSwapchain* swapchain);
-  inline PFN_rhi_cmd_end_draw_to_swapchain rhi_cmd_end_draw_to_swapchain;
+  RHI_FUNC_PTR(rhi_cmd_begin_draw_to_swapchain, void(*)(RHI* rhi, RhiSwapchain* swapchain));
+  RHI_FUNC_PTR(rhi_cmd_end_draw_to_swapchain, void(*)(RHI* rhi, RhiSwapchain* swapchain));
 }

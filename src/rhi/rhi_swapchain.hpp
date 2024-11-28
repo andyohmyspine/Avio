@@ -2,6 +2,7 @@
 
 #include "core.hpp"
 #include "rhi_render_surface.hpp"
+#include "rhi_types.hpp"
 
 #include <variant>
 
@@ -74,15 +75,8 @@ namespace avio {
     infos::RhiSwapchainInfo info;
   };
 
-  using PFN_rhi_create_swapchain = RhiSwapchain* (*)(RHI* rhi, const infos::RhiSwapchainInfo& info);
-  inline PFN_rhi_create_swapchain rhi_create_swapchain;
-
-  using PFN_rhi_destroy_swapchain = void (*)(RHI* rhi, RhiSwapchain* swapchain);
-  inline PFN_rhi_destroy_swapchain rhi_destroy_swapchain;
-
-  using PFN_rhi_present_swapchain = void (*)(RHI* rhi, RhiSwapchain* swapchain);
-  inline PFN_rhi_present_swapchain rhi_present_swapchain;
-
-  using PFN_rhi_submit_frame = void (*)(RHI* rhi);
-  inline PFN_rhi_submit_frame rhi_submit_frame;
+  RHI_FUNC_PTR(rhi_create_swapchain, RhiSwapchain* (*)(RHI* rhi, const infos::RhiSwapchainInfo& info));
+  RHI_FUNC_PTR(rhi_destroy_swapchain, void (*)(RHI* rhi, RhiSwapchain* swapchain));
+  RHI_FUNC_PTR(rhi_present_swapchain, void (*)(RHI* rhi, RhiSwapchain* swapchain));
+  RHI_FUNC_PTR(rhi_submit_frame, void (*)(RHI* rhi));
 }  // namespace avio
