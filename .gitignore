@@ -2,3 +2,7 @@ arch/
 bin/
 build/
 release_build/
+out/
+
+.vs/
+CMakeSettings.json
