@@ -9,6 +9,7 @@
 void sandbox_main(avio::Engine& engine) {
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   GLFWwindow* window = glfwCreateWindow(1280, 720, "Sandbox", nullptr, nullptr);
 
   // Create surface
