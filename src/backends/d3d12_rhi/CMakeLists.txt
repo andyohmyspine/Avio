@@ -7,3 +7,4 @@ target_link_libraries(d3d12_rhi PUBLIC
   dxgi
   d3d12)
 add_library(avio::d3d12_rhi ALIAS d3d12_rhi)
+target_precompile_headers(d3d12_rhi PRIVATE d3d12_pch.hpp)
