@@ -47,23 +47,10 @@ void sandbox_main(avio::Engine& engine) {
 int main(int argc, char** argv) {
   avio::Engine engine;
 
-  avio::RenderAPI render_api = {};
-  if (argc > 1) {
-#ifdef AVIO_D3D12_AVAILABLE
-    if (strcmp(argv[1], "d3d12") == 0) {
-      render_api = avio::RenderAPI::d3d12;
-    }
-#endif
-
-#ifdef AVIO_VULKAN_AVAILABLE
-    if(strcmp(argv[1], "vulkan") == 0) {
-      render_api = avio::RenderAPI::vulkan;
-    }
-#endif
-  }
-
   AV_COMMON_CATCH() {
-    AV_ASSERT_MSG(avio::init_engine(engine, {.render_api = render_api}), "Failed to initialize engine!");
+    avio::init_engine(engine, {
+                                  .args = avio::make_launch_args(argc, argv),
+                              });
     sandbox_main(engine);
     avio::shutdown_engine(engine);
   };

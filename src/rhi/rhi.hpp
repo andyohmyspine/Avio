@@ -50,6 +50,7 @@ namespace avio {
   RHI_FUNC_PTR(get_rhi, RHI* (*)());
   RHI_FUNC_PTR(rhi_begin_frame, void (*)(RHI* rhi));
   RHI_FUNC_PTR(rhi_end_frame, void (*)(RHI* rhi));
+  RHI_FUNC_PTR(rhi_submit_frame, void (*)(RHI* rhi));
 
   template <typename T>
   extern T* get_rhi_as() {

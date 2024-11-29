@@ -9,6 +9,7 @@
     "*.glsli": "glsl",
     "xutility": "cpp",
     "chrono": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "span": "cpp"
   }
 }

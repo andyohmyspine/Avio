@@ -8,6 +8,7 @@
 
 namespace avio {
   struct RHI;
+  struct RhiImageView;
 
   inline constexpr uint32_t RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT = 3;
 
@@ -82,5 +83,4 @@ namespace avio {
   RHI_FUNC_PTR(rhi_create_swapchain, RhiSwapchain* (*)(RHI* rhi, const infos::RhiSwapchainInfo& info));
   RHI_FUNC_PTR(rhi_destroy_swapchain, void (*)(RHI* rhi, RhiSwapchain* swapchain));
   RHI_FUNC_PTR(rhi_present_swapchain, void (*)(RHI* rhi, RhiSwapchain* swapchain));
-  RHI_FUNC_PTR(rhi_submit_frame, void (*)(RHI* rhi));
 }  // namespace avio

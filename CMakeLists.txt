@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(Avio)
 
+if(MSVC)
+    add_compile_options(/MP)
+endif()
+
 # Options
 option(AVIO_ENABLE_GPU_VALIDATION "whether to enable GPU validation." ON)
 
