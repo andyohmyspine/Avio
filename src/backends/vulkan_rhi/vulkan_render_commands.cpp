@@ -38,7 +38,7 @@ namespace avio::vulkan {
       .setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
       .setLoadOp(vk::AttachmentLoadOp::eClear)
       .setStoreOp(vk::AttachmentStoreOp::eStore)
-      .setClearValue(vk::ClearValue(vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f)));
+      .setClearValue(vk::ClearValue(vk::ClearColorValue(1.0f, 0.0f, 0.0f, 1.0f)));
 
     vk::RenderingInfoKHR rendering_info{};
     rendering_info.setFlags({})

@@ -51,6 +51,7 @@ namespace avio::dx12 {
 
   static void d3d12_create_command_block(RhiD3D12* d3d12);
   static void d3d12_create_sync(RhiD3D12* d3d12);
+  static void d3d12_create_rhi_descriptor_pools(RhiD3D12* d3d12);
 
   bool d3d12_rhi_init(RHI* rhi, const infos::RHIInfo& info) {
     // Create dxgi factory
@@ -103,6 +104,7 @@ namespace avio::dx12 {
 
     d3d12_create_command_block(d3d12);
     d3d12_create_sync(d3d12);
+    d3d12_create_rhi_descriptor_pools(d3d12);
 
     return true;
   }
@@ -116,6 +118,8 @@ namespace avio::dx12 {
       d3d12->command_allocators[index]->Release();
       d3d12->command_lists[index]->Release();
     }
+
+    d3d12_destroy_descriptor_pool(d3d12, &d3d12->rtv_descriptor_pool);
 
     d3d12->fence->Release();
 
@@ -155,6 +159,10 @@ namespace avio::dx12 {
 
   void d3d12_create_sync(RhiD3D12* d3d12) {
     HR_ASSERT(d3d12->device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&d3d12->fence)));
+  }
+
+  void d3d12_create_rhi_descriptor_pools(RhiD3D12* d3d12) {
+    d3d12->rtv_descriptor_pool = d3d12_create_descriptor_pool(d3d12, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1024, false);
   }
 
   static void signal_frame_in_flight(RhiD3D12* d3d12) {

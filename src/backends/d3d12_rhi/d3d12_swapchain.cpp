@@ -49,10 +49,11 @@ namespace avio::dx12 {
     const bool has_more_than_default_images = d3d12_sc->image_count > RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT;
 
     if(has_more_than_default_images) {
-      d3d12_sc->swapchain_images.set_is_vector();
-      d3d12_sc->swapchain_images.get_vector().resize(d3d12_sc->image_count);
+      d3d12_sc->swapchain_images.set_is_vector(d3d12_sc->image_count);
+      d3d12_sc->swapchain_image_views.set_is_vector(d3d12_sc->image_count);
     } else {
       d3d12_sc->swapchain_images.set_is_array();
+      d3d12_sc->swapchain_image_views.set_is_array();
     }
     
     // Get the desc so we can get the width and height of the image
@@ -71,6 +72,17 @@ namespace avio::dx12 {
       
       HR_ASSERT(d3d12_sc->swapchain->GetBuffer(index, IID_PPV_ARGS(&out_image.image)));
       d3d12_sc->swapchain_images[index] = out_image;
+
+      D3D12DescriptorHandle rtv_handle = d3d12_allocate_descriptors(&d3d12->rtv_descriptor_pool, 1);
+      d3d12->device->CreateRenderTargetView(out_image.image, nullptr, rtv_handle.cpu_handle);
+      d3d12_sc->swapchain_image_views[index] = D3D12ImageView {
+        .base = {
+          .image = &d3d12_sc->swapchain_images[index].base,
+          .type = ImageViewType::color,
+        },
+        .heap_type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV,
+        .descriptor_handle = rtv_handle,
+      };
     }
   }
   

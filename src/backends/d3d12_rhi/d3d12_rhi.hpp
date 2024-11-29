@@ -2,6 +2,7 @@
 
 #include "d3d12_common.hpp"
 #include "d3d12_swapchain.hpp"
+#include "d3d12_descriptors.hpp"
 #include "rhi.hpp"
 
 namespace avio::dx12 {
@@ -30,6 +31,8 @@ namespace avio::dx12 {
 
     InFlightArray<ID3D12CommandAllocator*> command_allocators;
     InFlightArray<ID3D12GraphicsCommandList4*> command_lists;
+
+    D3D12DescriptorPool rtv_descriptor_pool;
   };
 
   void d3d12_flush_command_queue(RhiD3D12* rhi);
