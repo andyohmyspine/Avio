@@ -13,7 +13,7 @@ namespace avio::vulkan {
   }
 
   // -------------------------------------------------------------------------------------------
-  void vulkan_cmd_begin_draw_to_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
+  void vulkan_cmd_begin_draw_to_swapchain(RHI* rhi, RhiSwapchain* swapchain, bool clear, Color clear_color) {
     auto [vulkan, cmd] = get_cmd(rhi);
     auto vk_sc = cast_rhi<VulkanSwapchain>(swapchain);
 
@@ -36,9 +36,9 @@ namespace avio::vulkan {
     vk::RenderingAttachmentInfo image_attachment {};
     image_attachment.setImageView(vk_sc->image_views[vk_sc->current_image_index].view)
       .setImageLayout(vk::ImageLayout::eColorAttachmentOptimal)
-      .setLoadOp(vk::AttachmentLoadOp::eClear)
+      .setLoadOp(clear ? vk::AttachmentLoadOp::eClear : vk::AttachmentLoadOp::eLoad)
       .setStoreOp(vk::AttachmentStoreOp::eStore)
-      .setClearValue(vk::ClearValue(vk::ClearColorValue(1.0f, 0.0f, 0.0f, 1.0f)));
+      .setClearValue(vk::ClearValue(vk::ClearColorValue(clear_color.r, clear_color.g, clear_color.b, clear_color.a)));
 
     vk::RenderingInfoKHR rendering_info{};
     rendering_info.setFlags({})

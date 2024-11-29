@@ -13,7 +13,7 @@ namespace avio::dx12 {
   }
 
   // -------------------------------------------------------------------------------------
-  void d3d12_cmd_begin_draw_to_swapchain(RHI* rhi, RhiSwapchain* swapchain) {
+  void d3d12_cmd_begin_draw_to_swapchain(RHI* rhi, RhiSwapchain* swapchain, bool clear, Color clear_color) {
     auto [d3d12, cmd] = get_cmd(rhi);
     auto d3d12_sc = cast_rhi<D3D12Swapchain>(swapchain);
 
@@ -25,8 +25,9 @@ namespace avio::dx12 {
     auto rtv = d3d12_current_swapchain_rtv(d3d12_sc);
     cmd->OMSetRenderTargets(1, &rtv->descriptor_handle.cpu_handle, FALSE, nullptr);
 
-    FLOAT clear_color[4] = {1.0f, 0.0f, 0.0f, 1.0f};
-    cmd->ClearRenderTargetView(rtv->descriptor_handle.cpu_handle, clear_color, 0, nullptr);
+    if (clear) {
+      cmd->ClearRenderTargetView(rtv->descriptor_handle.cpu_handle, clear_color.rgba, 0, nullptr);
+    }
   }
 
   // -------------------------------------------------------------------------------------
