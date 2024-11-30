@@ -28,7 +28,7 @@ void sandbox_main(avio::Engine& engine) {
     avio::rhi_begin_frame(engine.rhi);
     {
       {
-        avio::rhi_cmd_begin_draw_to_swapchain(engine.rhi, swapchain, true, avio::colors::cyan);
+        avio::rhi_cmd_begin_draw_to_swapchain(engine.rhi, swapchain, true, avio::colors::black);
 
         avio::rhi_cmd_end_draw_to_swapchain(engine.rhi, swapchain);
       }
