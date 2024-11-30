@@ -82,6 +82,21 @@ namespace avio::vulkan {
 
   // ---------------------------------------------------------------------------------------------
   void swapchain_acquire_next_image(RhiVulkan* rhi, VulkanSwapchain* swapchain) {
+    if (swapchain->requires_resize) {
+      swapchain->requires_resize = false;
+
+      // Recreate the swapchain
+      rhi->device.waitIdle();
+
+      // First destroy the swapchain
+      infos::RhiSwapchainInfo sc_info = swapchain->base.info;
+      vulkan_destroy_swapchain(&rhi->base, &swapchain->base);
+
+      // Then recreate the swapchain
+      RhiSwapchain* new_sc = vulkan_create_swapchain(&rhi->base, sc_info);
+      *swapchain = *(VulkanSwapchain*)new_sc;
+    }
+
     vk::Semaphore sem_to_signal = get_image_ready_semaphore(swapchain, swapchain->current_image_index);
     uint32_t new_image_index =
         rhi->device.acquireNextImageKHR(swapchain->swapchain, UINT64_MAX, sem_to_signal, VK_NULL_HANDLE).value;
@@ -238,8 +253,11 @@ namespace avio::vulkan {
           throw Error("Pressent failed: {}", vk::to_string(present_result));
       }
     } catch (const vk::OutOfDateKHRError& error) {
-      throw Error("Resizing swapchain is currently unsupported in vulkan. Pressent failed: {}",
-                  vk::to_string(present_result));
+      // throw Error("Resizing swapchain is currently unsupported in vulkan. Pressent failed: {}",
+      //            vk::to_string(present_result));
+
+      vk_sc->requires_resize = true;
+      AV_LOG(info, "Vulkan swapchain resize requested.");
     } catch (...) {
       throw;
     }

@@ -23,6 +23,7 @@ namespace avio::vulkan {
     PerImageArray<VulkanImageView> image_views;
 
     bool has_more_than_default_images : 1 = false;
+    bool requires_resize : 1 = false;
   };
 
   RhiSwapchain* vulkan_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info);

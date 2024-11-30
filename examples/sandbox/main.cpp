@@ -9,7 +9,7 @@
 void sandbox_main(avio::Engine& engine) {
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+  // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   GLFWwindow* window = glfwCreateWindow(1280, 720, "Sandbox", nullptr, nullptr);
 
   // Create surface
@@ -29,7 +29,7 @@ void sandbox_main(avio::Engine& engine) {
     {
       {
         avio::rhi_cmd_begin_draw_to_swapchain(engine.rhi, swapchain, true, avio::colors::black);
-
+        
         avio::rhi_cmd_end_draw_to_swapchain(engine.rhi, swapchain);
       }
 
