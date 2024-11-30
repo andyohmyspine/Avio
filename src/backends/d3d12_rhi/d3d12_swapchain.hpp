@@ -14,6 +14,9 @@ namespace avio::dx12 {
 
     PerImageArray<D3D12Image> swapchain_images{};
     PerImageArray<D3D12ImageView> swapchain_image_views{};
+
+    uint32_t width = {};
+    uint32_t height = {};
   };
 
   RhiSwapchain* d3d12_create_swapchain(RHI* rhi, const infos::RhiSwapchainInfo& info);
