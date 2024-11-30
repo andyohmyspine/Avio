@@ -94,7 +94,9 @@ namespace avio::vulkan {
 
       // Then recreate the swapchain
       RhiSwapchain* new_sc = vulkan_create_swapchain(&rhi->base, sc_info);
-      *swapchain = *(VulkanSwapchain*)new_sc;
+
+      // Just copy a new swapchain to the old place. 
+      *swapchain = std::move(*(VulkanSwapchain*)new_sc);
     }
 
     vk::Semaphore sem_to_signal = get_image_ready_semaphore(swapchain, swapchain->current_image_index);
