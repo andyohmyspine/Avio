@@ -7,6 +7,8 @@
 #include <unordered_map>
 
 namespace avio {
+#define SHADER_COMPILER_ASSERT(x) AV_ASSERT(SLANG_SUCCEEDED((x)))
+
   struct RhiShaderModule {
     RhiShaderCompiler* parent;
     slang::IModule* shader_module;
@@ -67,7 +69,7 @@ namespace avio {
     }
 
     void rhi_shutdown_shader_compiler(RhiShaderCompiler* compiler) {
-      for(auto& [_, mod] : compiler->shader_modules) {
+      for (auto& [_, mod] : compiler->shader_modules) {
         mod.shader_module->release();
       }
 
@@ -83,19 +85,38 @@ namespace avio {
       return &compiler->shader_modules.at(module_name_string);
     }
 
-    Slang::ComPtr<ISlangBlob> diagnostics_blob; 
+    Slang::ComPtr<ISlangBlob> diagnostics_blob;
     RhiShaderModule out_module{
-      .parent = compiler,
-      .shader_module = compiler->session->loadModule(module_name, diagnostics_blob.writeRef())
-    };
+        .parent = compiler, .shader_module = compiler->session->loadModule(module_name, diagnostics_blob.writeRef())};
 
-    if(diagnostics_blob) {
-      if(!out_module.shader_module) {
-        throw Error("Failed to compile shader module '{}': {}", module_name, (const char*)diagnostics_blob->getBufferPointer());
+    if (diagnostics_blob) {
+      if (!out_module.shader_module) {
+        throw Error("Failed to compile shader module '{}': {}", module_name,
+                    (const char*)diagnostics_blob->getBufferPointer());
       } else {
-        AV_LOG(warn, "'{}' shader compilation produced following errors and warnings: {}", module_name, (const char*)diagnostics_blob->getBufferPointer());
+        AV_LOG(warn, "'{}' shader compilation produced following errors and warnings: {}", module_name,
+               (const char*)diagnostics_blob->getBufferPointer());
       }
     }
+
+    // Collect module reflection info
+    std::vector<slang::IComponentType*> linked_components{out_module.shader_module};
+
+    if (out_module.shader_module) {
+      const SlangInt entry_point_count = out_module.shader_module->getDefinedEntryPointCount();
+      for (int32_t index = 0; index < entry_point_count; ++index) {
+        slang::IEntryPoint* entry_point = {};
+        SHADER_COMPILER_ASSERT(out_module.shader_module->getDefinedEntryPoint(index, &entry_point));
+        linked_components.push_back(entry_point);
+      }
+    }
+
+    // Linked program
+    slang::IComponentType* program;
+    SHADER_COMPILER_ASSERT(compiler->session->createCompositeComponentType(linked_components.data(), (SlangInt)linked_components.size(), &program));
+
+    slang::IComponentType* linked_program;
+    SHADER_COMPILER_ASSERT(program->link(&linked_program, diagnostics_blob.writeRef()));
 
     compiler->shader_modules[module_name_string] = out_module;
     return &compiler->shader_modules.at(module_name_string);
