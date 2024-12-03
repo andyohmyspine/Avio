@@ -1,4 +1,4 @@
-create_static_module(engine)
-add_library(avio::engine ALIAS engine)
+create_static_module(avio_engine)
+add_library(avio::engine ALIAS avio_engine)
 
-target_link_libraries(engine PUBLIC avio::core avio::rhi)
+target_link_libraries(avio_engine PUBLIC avio::core avio::rhi)

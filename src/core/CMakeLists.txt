@@ -1,8 +1,8 @@
-create_static_module(core)
+create_static_module(avio_core)
 
-add_library(avio::core ALIAS core)
-target_precompile_headers(core PUBLIC core_pch.hpp)
+add_library(avio::core ALIAS avio_core)
+target_precompile_headers(avio_core PUBLIC core_pch.hpp)
 
-target_link_libraries(core
+target_link_libraries(avio_core
   PUBLIC
     spdlog)

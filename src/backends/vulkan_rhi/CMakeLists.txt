@@ -1,9 +1,9 @@
-create_static_module(vulkan_rhi)
+create_static_module(avio_vulkan_rhi)
 
 find_package(Vulkan REQUIRED)
-target_link_libraries(vulkan_rhi PUBLIC 
+target_link_libraries(avio_vulkan_rhi PUBLIC 
   avio::rhi
   Vulkan::Vulkan)
-add_library(avio::vulkan_rhi ALIAS vulkan_rhi)
+add_library(avio::vulkan_rhi ALIAS avio_vulkan_rhi)
 
-target_precompile_headers(vulkan_rhi PRIVATE vulkan_pch.hpp)
+target_precompile_headers(avio_vulkan_rhi PRIVATE vulkan_pch.hpp)

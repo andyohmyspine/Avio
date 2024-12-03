@@ -1,7 +1,7 @@
-create_static_module(rhi)
-add_library(avio::rhi ALIAS rhi)
+create_static_module(avio_rhi)
+add_library(avio::rhi ALIAS avio_rhi)
 
-target_link_libraries(rhi PUBLIC avio::core)
+target_link_libraries(avio_rhi PUBLIC avio::core)
 
 if(WIN32)
   set(AVIO_D3D12_AVAILABLE ON CACHE BOOL "")
@@ -17,15 +17,15 @@ else()
 endif()
 
 if(AVIO_ENABLE_GPU_VALIDATION)
-  target_compile_definitions(rhi PUBLIC AVIO_ENABLE_GPU_VALIDATION)
+  target_compile_definitions(avio_rhi PUBLIC AVIO_ENABLE_GPU_VALIDATION)
 endif()
 
 if(AVIO_D3D12_AVAILABLE)
-  target_link_libraries(rhi PUBLIC avio::d3d12_rhi)
-  target_compile_definitions(rhi PUBLIC AVIO_D3D12_AVAILABLE)
+  target_link_libraries(avio_rhi PUBLIC avio::d3d12_rhi)
+  target_compile_definitions(avio_rhi PUBLIC AVIO_D3D12_AVAILABLE)
 endif()
 
 if(AVIO_VULKAN_AVAILABLE)
-  target_link_libraries(rhi PUBLIC avio::vulkan_rhi)
-  target_compile_definitions(rhi PUBLIC AVIO_VULKAN_AVAILABLE)
+  target_link_libraries(avio_rhi PUBLIC avio::vulkan_rhi)
+  target_compile_definitions(avio_rhi PUBLIC AVIO_VULKAN_AVAILABLE)
 endif()
