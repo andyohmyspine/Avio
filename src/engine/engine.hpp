@@ -11,6 +11,7 @@ namespace avio {
   namespace infos {
     struct EngineInfo {
       std::span<const char* const> args;
+      std::span<const char* const> shader_search_paths;
       std::optional<RenderAPI> override_render_api;
     };
   }  // namespace infos

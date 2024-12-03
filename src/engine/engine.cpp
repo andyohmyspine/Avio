@@ -29,6 +29,7 @@ namespace avio {
     // Initialize RHI
     AV_ASSERT_MSG(init_rhi(&out_engine.rhi,
                            {
+                               .shader_search_paths = in_engine_info.shader_search_paths,
                                .render_api = determine_render_api(in_engine_info),
                            }),
                   "Failed to initialize RHI.");

@@ -1,4 +1,4 @@
-create_static_module(avio_vulkan_rhi)
+avio_create_static_module(avio_vulkan_rhi)
 
 find_package(Vulkan REQUIRED)
 target_link_libraries(avio_vulkan_rhi PUBLIC 

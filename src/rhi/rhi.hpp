@@ -7,6 +7,7 @@
 #include "rhi_types.hpp"
 
 #include <array>
+#include <span>
 
 namespace avio {
 
@@ -15,28 +16,24 @@ namespace avio {
   template <typename T>
   using InFlightArray = std::array<T, RHI_NUM_FRAMES_IN_FLIGHT>;
 
-  enum class RenderAPI {
-#ifdef AVIO_D3D12_AVAILABLE
-    d3d12,
-#endif
-
-#ifdef AVIO_VULKAN_AVAILABLE
-    vulkan,
-#endif
-  };
-
   /**
  * Rhi configuration struct.
  */
   namespace infos {
     struct RHIInfo {
+      std::span<const char* const> shader_search_paths;
       RenderAPI render_api{};
     };
   }  // namespace infos
   /**
  * Rhi object. That should be initialized.
  */
+
+  struct RhiShaderCompiler;
+
   struct RHI {
+    RhiShaderCompiler* shader_compiler;
+
     uint32_t current_frame_in_flight = 0;
     bool (*init_impl)(RHI* rhi, const infos::RHIInfo& info);
     void (*shutdown_impl)(RHI* rhi);
@@ -51,6 +48,9 @@ namespace avio {
   RHI_FUNC_PTR(rhi_begin_frame, void (*)(RHI* rhi));
   RHI_FUNC_PTR(rhi_end_frame, void (*)(RHI* rhi));
   RHI_FUNC_PTR(rhi_submit_frame, void (*)(RHI* rhi));
+
+  // Shader API
+  struct RhiShaderModule* rhi_compile_shader_module(RHI* rhi, const char* module_name);
 
   template <typename T>
   extern T* get_rhi_as() {

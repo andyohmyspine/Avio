@@ -6,6 +6,8 @@
 #include "GLFW/glfw3native.h"
 #endif
 
+#include <filesystem>
+
 void sandbox_main(avio::Engine& engine) {
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -21,6 +23,8 @@ void sandbox_main(avio::Engine& engine) {
 
   avio::RhiSurface* surface = avio::rhi_create_surface(engine.rhi, surface_info);
   avio::RhiSwapchain* swapchain = avio::rhi_create_swapchain(engine.rhi, {.surface = surface, .allow_vsync = false});
+
+  avio::RhiShaderModule* test_shader = avio::rhi_compile_shader_module(engine.rhi, "hello-world");
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
@@ -48,9 +52,15 @@ void sandbox_main(avio::Engine& engine) {
 int main(int argc, char** argv) {
   avio::Engine engine;
 
+  // These should be relative to root directory
+  const char* shader_search_paths[] = {
+    "examples/sandbox/assets/shaders/"
+  };
+
   AV_COMMON_CATCH() {
     avio::init_engine(engine, {
                                   .args = avio::make_launch_args(argc, argv),
+                                  .shader_search_paths = shader_search_paths,
                               });
     sandbox_main(engine);
     avio::shutdown_engine(engine);

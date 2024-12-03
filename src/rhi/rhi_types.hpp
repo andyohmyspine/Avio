@@ -9,11 +9,22 @@
 #endif
 
 namespace avio {
+
+  enum class RenderAPI {
+#ifdef AVIO_D3D12_AVAILABLE
+    d3d12,
+#endif
+
+#ifdef AVIO_VULKAN_AVAILABLE
+    vulkan,
+#endif
+  };
+
   enum class PixelFormat {
     none,
     window_output,
     max_formats,
-  }; 
+  };
 
   enum class ImageType {
     image_2d,
@@ -38,4 +49,4 @@ namespace avio {
     RhiImage* image;
     ImageViewType type;
   };
-}
+}  // namespace avio

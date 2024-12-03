@@ -1,4 +1,4 @@
-create_static_module(avio_rhi)
+avio_create_static_module(avio_rhi)
 add_library(avio::rhi ALIAS avio_rhi)
 
 target_link_libraries(avio_rhi PUBLIC avio::core)
@@ -14,6 +14,10 @@ if(Vulkan_FOUND)
   set(AVIO_VULKAN_AVAILABLE ON CACHE BOOL "")
 else()
   set(AVIO_VULKAN_AVAILABLE OFF CACHE BOOL "")
+endif()
+
+if(AVIO_ENABLE_SLANG)
+  targeT_link_libraries(avio_rhi PRIVATE slang)
 endif()
 
 if(AVIO_ENABLE_GPU_VALIDATION)
