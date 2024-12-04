@@ -1,15 +1,28 @@
 module hello_world;
-import avio_shader;
+
 import core.avio_core;
 
-StructuredBuffer<float> buffer0;
-StructuredBuffer<float> buffer1;
-RWStructuredBuffer<float> result;
+struct VertexInput {
+    float3 position : POSITION;
+    float4 color : COLOR;
+}
 
-[shader("compute")]
-[numthreads(1,1,1)]
-func computeMain(uint3 thread_id: SV_DispatchThreadID)
-{
-    uint index = thread_id.x;
-    result[index] = avio::add_two_numbers(buffer0[index], buffer1[index]);
+struct VsToPs {
+    float4 position : SV_Position;
+    float4 color : COLOR;    
+}
+
+[require(sm_6_6)]
+[shader("vertex")]
+VsToPs vs_main(in VertexInput vertex) {
+    VsToPs output;
+    output.position = float4(vertex.position.xyz, 1.0f);
+    output.color = vertex.color;
+    return output;
+}
+
+[require(sm_6_6)]
+[shader("pixel")]
+float4 ps_main(in VsToPs input) : SV_Target0 {
+    return input.color;
 }

@@ -40,6 +40,22 @@ namespace avio::vulkan {
     };
   }
 
+    // ---------------------------------------------------------------------------------------------
+  static consteval auto get_required_device_extensions() noexcept {
+    return std::array{
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+
+#if AV_VK_USE_DYNAMIC_RENDERING
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+#endif
+
+#if AV_REQUIRE_DESCRIPTOR_BUFFERS
+        VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
+#endif
+    };
+  }
+
   // ---------------------------------------------------------------------------------------------
   static consteval auto get_required_layer_names() noexcept {
 #ifdef AVIO_ENABLE_GPU_VALIDATION
@@ -225,21 +241,6 @@ namespace avio::vulkan {
     VK_ASSERT(create_messenger_func(vulkan->instance, &messenger_info_c, nullptr, &messenger));
     vulkan->debug_messenger = messenger;
 #endif
-  }
-
-  // ---------------------------------------------------------------------------------------------
-  static consteval auto get_required_device_extensions() noexcept {
-    return std::array{
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-
-#if AV_VK_USE_DYNAMIC_RENDERING
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-#endif
-
-#if AV_REQUIRE_DESCRIPTOR_BUFFERS
-        VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
-#endif
-    };
   }
 
   // ---------------------------------------------------------------------------------------------

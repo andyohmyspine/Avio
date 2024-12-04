@@ -45,16 +45,16 @@ namespace avio {
 #ifdef AVIO_VULKAN_AVAILABLE
       if (info.render_api == RenderAPI::vulkan) {
         target_desc.format = SLANG_SPIRV;
-        target_desc.profile = compiler->global_session->findProfile("glsl_450");
-        AV_LOG(info, "Initializing Slang Shader Compiler to work with SPIR-V");
+        target_desc.profile = compiler->global_session->findProfile("sm_6_6");
+        AV_LOG(info, "Initializing Slang Shader Compiler to work with SPIR-V (sm_6_6)");
       }
 #endif
 
 #ifdef AVIO_D3D12_AVAILABLE
       if (info.render_api == RenderAPI::d3d12) {
         target_desc.format = SLANG_DXIL;
-        target_desc.profile = compiler->global_session->findProfile("sm_6_2");
-        AV_LOG(info, "Initializing Slang Shader Compiler to work with DXIL");
+        target_desc.profile = compiler->global_session->findProfile("sm_6_6");
+        AV_LOG(info, "Initializing Slang Shader Compiler to work with DXIL (sm_6_6)");
       }
 #endif
 
@@ -70,8 +70,9 @@ namespace avio {
       // Try to compile default library module
       try {
         rhi_compiler_compile_shader_module(compiler, "avio_shader");
-      } catch(const Error& error) {
-        AV_LOG(critical, "Failed to load default slang module. Make sure to add avio shaders path to the shader includes.");
+      } catch (const Error& error) {
+        AV_LOG(critical,
+               "Failed to load default slang module. Make sure to add avio shaders path to the shader includes.");
         throw;
       }
     }
@@ -86,6 +87,38 @@ namespace avio {
     }
   }  // namespace detail
   // namespace detail
+
+  static slang::IComponentType* link_shader_entry_points(RhiShaderCompiler* compiler, slang::IModule* in_module) {
+    std::vector<slang::IComponentType*> linked_components{in_module};
+    if (in_module) {
+      const SlangInt entry_point_count = in_module->getDefinedEntryPointCount();
+      for (int32_t index = 0; index < entry_point_count; ++index) {
+        slang::IEntryPoint* entry_point = {};
+        SHADER_COMPILER_ASSERT(in_module->getDefinedEntryPoint(index, &entry_point));
+        linked_components.push_back(entry_point);
+      }
+    }
+
+    // Linked program
+    Slang::ComPtr<slang::IComponentType> program;
+    SHADER_COMPILER_ASSERT(compiler->session->createCompositeComponentType(
+        linked_components.data(), (SlangInt)linked_components.size(), program.writeRef()));
+
+    Slang::ComPtr<ISlangBlob> diagnostics_blob{};
+    slang::IComponentType* linked_program;
+    SHADER_COMPILER_ASSERT(program->link(&linked_program, diagnostics_blob.writeRef()));
+
+    if (diagnostics_blob) {
+      if (!linked_program) {
+        throw Error("Failed to link shader program: {}", (const char*)diagnostics_blob->getBufferPointer());
+      } else {
+        AV_LOG(warn, "Shader program linking produced following errors and warnings: {}",
+               (const char*)diagnostics_blob->getBufferPointer());
+      }
+    }
+
+    return linked_program;
+  }
 
   RhiShaderModule* rhi_compiler_compile_shader_module(RhiShaderCompiler* compiler, const char* module_name) {
     std::string module_name_string = module_name;
@@ -108,23 +141,7 @@ namespace avio {
     }
 
     // Collect module reflection info
-    std::vector<slang::IComponentType*> linked_components{out_module.shader_module};
-
-    if (out_module.shader_module) {
-      const SlangInt entry_point_count = out_module.shader_module->getDefinedEntryPointCount();
-      for (int32_t index = 0; index < entry_point_count; ++index) {
-        slang::IEntryPoint* entry_point = {};
-        SHADER_COMPILER_ASSERT(out_module.shader_module->getDefinedEntryPoint(index, &entry_point));
-        linked_components.push_back(entry_point);
-      }
-    }
-
-    // Linked program
-    slang::IComponentType* program;
-    SHADER_COMPILER_ASSERT(compiler->session->createCompositeComponentType(linked_components.data(), (SlangInt)linked_components.size(), &program));
-
-    slang::IComponentType* linked_program;
-    SHADER_COMPILER_ASSERT(program->link(&linked_program, diagnostics_blob.writeRef()));
+    slang::IComponentType* program = link_shader_entry_points(compiler, out_module.shader_module);
 
     compiler->shader_modules[module_name_string] = out_module;
     return &compiler->shader_modules.at(module_name_string);
