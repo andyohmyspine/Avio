@@ -10,4 +10,4 @@ namespace avio {
   struct RhiD3D12;
 }
 
-#define HR_ASSERT(hr) AV_ASSERT(SUCCEEDED(hr))
+#define HR_ASSERT(hr) avio::check(SUCCEEDED(hr))

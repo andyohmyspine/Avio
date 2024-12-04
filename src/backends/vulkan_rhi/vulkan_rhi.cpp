@@ -2,6 +2,7 @@
 #include "vulkan_render_commands.hpp"
 #include "vulkan_surface.hpp"
 #include "vulkan_swapchain.hpp"
+#include "rhi_interface.hpp"
 
 #include <array>
 #include <ranges>
@@ -30,12 +31,32 @@ namespace avio::vulkan {
         "VK_KHR_win32_surface",
 #endif
 
+#if defined(__linux__) && defined(AVIO_X11_AVAILABLE)
+        "VK_KHR_xlib_surface",
+#endif
+
 #if AV_VK_USE_DYNAMIC_RENDERING
         VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 #endif
 
 #if defined(AVIO_ENABLE_GPU_VALIDATION)
         "VK_EXT_debug_utils",
+#endif
+    };
+  }
+
+    // ---------------------------------------------------------------------------------------------
+  static consteval auto get_required_device_extensions() noexcept {
+    return std::array{
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME,
+
+#if AV_VK_USE_DYNAMIC_RENDERING
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+#endif
+
+#if AV_REQUIRE_DESCRIPTOR_BUFFERS
+        VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
 #endif
     };
   }
@@ -55,13 +76,13 @@ namespace avio::vulkan {
                                   const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
     switch (messageSeverity) {
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        AV_LOG(error, "Vulkan validation: {}", pCallbackData->pMessage);
+        log::error("Vulkan validation: {}", pCallbackData->pMessage);
         break;
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        AV_LOG(info, "Vulkan validation: {}", pCallbackData->pMessage);
+        log::info("Vulkan validation: {}", pCallbackData->pMessage);
         break;
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        AV_LOG(warn, "Vulkan validation: {}", pCallbackData->pMessage);
+        log::warn("Vulkan validation: {}", pCallbackData->pMessage);
         break;
       default:
         break;
@@ -78,7 +99,7 @@ namespace avio::vulkan {
       for (const auto& supported : supported_extensions) {
         if (strcmp(required, supported.extensionName.data()) == 0) {
           is_supported = true;
-          AV_LOG(trace, "Vulkan instance extension '{}' is supported.", required);
+          log::trace("Vulkan instance extension '{}' is supported.", required);
           break;
         }
       }
@@ -101,7 +122,7 @@ namespace avio::vulkan {
       for (const auto& supported : supported_layers) {
         if (strcmp(required, supported.layerName.data()) == 0) {
           is_supported = true;
-          AV_LOG(trace, "Vulkan instance layer '{}' is supported.", required);
+          log::trace("Vulkan instance layer '{}' is supported.", required);
           break;
         }
       }
@@ -135,7 +156,7 @@ namespace avio::vulkan {
 
     if (vulkan->physical_device.device) {
       auto device_props = vulkan->physical_device.device.getProperties();
-      AV_LOG(info, "Selected vulkan adapter: {}", device_props.deviceName.data());
+      log::info("Selected vulkan adapter: {}", device_props.deviceName.data());
     }
 
     create_vulkan_device(vulkan, info);
@@ -180,7 +201,7 @@ namespace avio::vulkan {
     // This should go last
     vulkan->instance.destroy();
 
-    AV_LOG(info, "Vulkan RHI terminated.");
+    log::info("Vulkan RHI terminated.");
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -214,7 +235,7 @@ namespace avio::vulkan {
 #endif
 
     vulkan->instance = vk::createInstance(inst_info);
-    AV_LOG(info, "Vulkan instance created.");
+    log::info("Vulkan instance created.");
 
 #ifdef AVIO_ENABLE_GPU_VALIDATION
     PFN_vkCreateDebugUtilsMessengerEXT create_messenger_func =
@@ -225,21 +246,6 @@ namespace avio::vulkan {
     VK_ASSERT(create_messenger_func(vulkan->instance, &messenger_info_c, nullptr, &messenger));
     vulkan->debug_messenger = messenger;
 #endif
-  }
-
-  // ---------------------------------------------------------------------------------------------
-  static consteval auto get_required_device_extensions() noexcept {
-    return std::array{
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-
-#if AV_VK_USE_DYNAMIC_RENDERING
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-#endif
-
-#if AV_REQUIRE_DESCRIPTOR_BUFFERS
-        VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
-#endif
-    };
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -347,11 +353,11 @@ namespace avio::vulkan {
 #endif
 
     vulkan->device = vulkan->physical_device.device.createDevice(create_info);
-    AV_LOG(info, "Vulkan logical device created.");
+    log::info("Vulkan logical device created.");
 
     // Pick queues
     vulkan->graphics_queue = vulkan->device.getQueue(vulkan->physical_device.queue_indices.graphics, 0);
-    AV_LOG(info, "Vulkan graphics queue initialized.");
+    log::info("Vulkan graphics queue initialized.");
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -399,7 +405,7 @@ namespace avio::vulkan {
   }
 
   static void vulkan_begin_frame(RHI* rhi) {
-    AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
+    avio::check_msg(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
     rhi->has_began_frame = true;
     auto vulkan = cast_rhi<RhiVulkan>(rhi);
     auto current_frame_in_flight = rhi->current_frame_in_flight;
@@ -424,7 +430,7 @@ namespace avio::vulkan {
   }
 
   static void vulkan_end_frame(RHI* rhi) {
-    AV_ASSERT_MSG(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
+    avio::check_msg(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
     rhi->has_began_frame = false;
 
     auto vulkan = cast_rhi<RhiVulkan>(rhi);
@@ -435,19 +441,19 @@ namespace avio::vulkan {
 
   void init_global_rhi_pointers() {
     // Default functions
-    get_rhi = get_rhi_vulkan;
-    rhi_submit_frame = vulkan_rhi_submit_frame;
-    rhi_begin_frame = vulkan_begin_frame;
-    rhi_end_frame = vulkan_end_frame;
+    funcs::get_rhi_ = get_rhi_vulkan;
+    funcs::rhi_submit_frame_ = vulkan_rhi_submit_frame;
+    funcs::rhi_begin_frame_ = vulkan_begin_frame;
+    funcs::rhi_end_frame_ = vulkan_end_frame;
 
     // Surface functions
-    rhi_create_surface = vulkan_create_surface;
-    rhi_destroy_surface = vulkan_destroy_surface;
+    funcs::rhi_create_surface_ = vulkan_create_surface;
+    funcs::rhi_destroy_surface_ = vulkan_destroy_surface;
 
     // Swapchain functions
-    rhi_create_swapchain = vulkan_create_swapchain;
-    rhi_destroy_swapchain = vulkan_destroy_swapchain;
-    rhi_present_swapchain = vulkan_present_swapchain;
+    funcs::rhi_create_swapchain_ = vulkan_create_swapchain;
+    funcs::rhi_destroy_swapchain_ = vulkan_destroy_swapchain;
+    funcs::rhi_present_swapchain_ = vulkan_present_swapchain;
 
     detail::init_cmd_pointers();
   }

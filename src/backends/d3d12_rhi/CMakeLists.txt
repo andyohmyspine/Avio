@@ -1,4 +1,4 @@
-create_static_module(avio_d3d12_rhi)
+avio_create_static_module(avio_d3d12_rhi)
 
 target_link_libraries(avio_d3d12_rhi PUBLIC 
   avio::rhi 

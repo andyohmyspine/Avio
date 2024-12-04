@@ -47,7 +47,7 @@ namespace avio::dx12 {
     }
 
     out_pool.descriptor_increment_size = rhi->device->GetDescriptorHandleIncrementSize(heap_type);
-    AV_LOG(info, "D3D12 {} {} descriptor pool created with {} descriptors.", to_string(heap_type),
+    log::info("D3D12 {} {} descriptor pool created with {} descriptors.", to_string(heap_type),
            shader_visible ? "shader-visible" : "non-shader-visible", num_descriptors);
     return out_pool;
   }

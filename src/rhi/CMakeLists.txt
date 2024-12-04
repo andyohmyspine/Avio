@@ -1,4 +1,4 @@
-create_static_module(avio_rhi)
+avio_create_static_module(avio_rhi)
 add_library(avio::rhi ALIAS avio_rhi)
 
 target_link_libraries(avio_rhi PUBLIC avio::core)
@@ -11,9 +11,14 @@ endif()
 
 find_package(Vulkan QUIET)
 if(Vulkan_FOUND)
+  message(STATUS "Vulkan found.")
   set(AVIO_VULKAN_AVAILABLE ON CACHE BOOL "")
 else()
   set(AVIO_VULKAN_AVAILABLE OFF CACHE BOOL "")
+endif()
+
+if(AVIO_ENABLE_SLANG)
+  targeT_link_libraries(avio_rhi PRIVATE slang slang-rt)
 endif()
 
 if(AVIO_ENABLE_GPU_VALIDATION)
@@ -28,4 +33,25 @@ endif()
 if(AVIO_VULKAN_AVAILABLE)
   target_link_libraries(avio_rhi PUBLIC avio::vulkan_rhi)
   target_compile_definitions(avio_rhi PUBLIC AVIO_VULKAN_AVAILABLE)
+endif()
+
+if(UNIX AND NOT APPLE)
+  find_package(X11 REQUIRED)
+  if(X11_FOUND)
+    message(STATUS "Found X11. Setting as one of the available targets.")
+    set(AVIO_X11_AVAILABLE ON CACHE BOOL "")
+    else()
+    message(STATUS "X11 not found.")
+    set(AVIO_X11_AVAILABLE OFF CACHE BOOL "")
+    target_link_libraries(avio_rhi PUBLIC ${X11_LIBRARIES})
+    target_include_directories(avio_rhi PUBLIC ${X11_INCLUDE_DIR})
+  endif()
+
+  find_package(Wayland REQUIRED)
+
+  # target_include_directories(avio_rhi PUBLIC ${X11_INCLUDE_DIR})
+endif()
+
+if(AVIO_X11_AVAILABLE)
+  target_compile_definitions(avio_rhi PUBLIC AVIO_X11_AVAILABLE)
 endif()

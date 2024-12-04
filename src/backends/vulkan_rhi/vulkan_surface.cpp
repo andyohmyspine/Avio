@@ -7,6 +7,7 @@
 
 #ifdef __linux__
 #include <vulkan/vulkan_xlib.h>
+#include "X11/Xlib.h"
 #endif
 
 #ifdef __APPLE__
@@ -15,8 +16,7 @@
 
 namespace avio::vulkan {
 
-  RhiSurface* vulkan_create_surface(RHI* rhi,
-                                    const infos::RhiSurfaceInfo& info) {
+  RhiSurface* vulkan_create_surface(RHI* rhi, const infos::RhiSurfaceInfo& info) {
     RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
     VulkanSurface* surface = vulkan->surfaces.allocate();
 
@@ -33,16 +33,21 @@ namespace avio::vulkan {
         .hwnd = info.hwnd,
     };
 
-    VK_ASSERT(vkCreateWin32SurfaceKHR(vulkan->instance, &create_info, nullptr,
-                                      &vk_surface));
+    VK_ASSERT(vkCreateWin32SurfaceKHR(vulkan->instance, &create_info, nullptr, &vk_surface));
 // ------ LINUX -----------
 #elif defined(__linux__)
-    VkXlibSurfaceCreateInfo create_info{
-        .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
-        .pNext = nullptr,
-        .flags = 0,
+#ifdef AVIO_X11_AVAILABLE
+  if(info.surface_type == infos::LinuxSurfaceType::x11) {
+    VkXlibSurfaceCreateInfoKHR create_info {
+      .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+      .pNext = nullptr,
+      .flags = 0,
+      .dpy = info.x11.x11_display,
+      .window = info.x11.x11_window,
     };
-
+    VK_ASSERT(vkCreateXlibSurfaceKHR(vulkan->instance, &create_info, nullptr, &vk_surface));
+  }
+#endif
 // ------ MAC -----------
 #elif defined(__APPLE__)
 

@@ -79,8 +79,4 @@ namespace avio {
   struct RhiSwapchain {
     infos::RhiSwapchainInfo info;
   };
-
-  RHI_FUNC_PTR(rhi_create_swapchain, RhiSwapchain* (*)(RHI* rhi, const infos::RhiSwapchainInfo& info));
-  RHI_FUNC_PTR(rhi_destroy_swapchain, void (*)(RHI* rhi, RhiSwapchain* swapchain));
-  RHI_FUNC_PTR(rhi_present_swapchain, void (*)(RHI* rhi, RhiSwapchain* swapchain));
 }  // namespace avio

@@ -1,6 +1,7 @@
 #include "d3d12_rhi.hpp"
 #include "d3d12_render_commands.hpp"
 #include "d3d12_surface.hpp"
+#include "rhi_interface.hpp"
 
 namespace avio::dx12 {
 
@@ -29,19 +30,19 @@ namespace avio::dx12 {
                                                D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext) {
     switch (Severity) {
       case D3D12_MESSAGE_SEVERITY_INFO:
-        AV_LOG(info, "D3D12 Validation: {}", pDescription);
+        log::info("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_MESSAGE:
-        AV_LOG(trace, "D3D12 Validation: {}", pDescription);
+        log::trace("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_WARNING:
-        AV_LOG(warn, "D3D12 Validation: {}", pDescription);
+        log::warn("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_ERROR:
-        AV_LOG(error, "D3D12 Validation: {}", pDescription);
+        log::error("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_CORRUPTION:
-        AV_LOG(critical, "D3D12 Validation: {}", pDescription);
+        log::critical("D3D12 Validation: {}", pDescription);
         break;
       default:
         break;
@@ -67,7 +68,7 @@ namespace avio::dx12 {
     // Pick adapter
     HR_ASSERT(d3d12->dxgi_factory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
                                                               IID_PPV_ARGS(&d3d12->adapter)));
-    AV_LOG(info, "DXGI factory created.");
+    log::info("DXGI factory created.");
 
     // Log adapter
     DXGI_ADAPTER_DESC adapter_desc;
@@ -77,7 +78,7 @@ namespace avio::dx12 {
 
     char adapter_name[std::size(adapter_desc.Description)]{};
     wcstombs(adapter_name, adapter_desc.Description, std::size(adapter_desc.Description));
-    AV_LOG(info, "DXGI adapter selected: {}", adapter_name);
+    log::info("DXGI adapter selected: {}", adapter_name);
 
 // Create device
 #ifdef AVIO_ENABLE_GPU_VALIDATION
@@ -100,7 +101,7 @@ namespace avio::dx12 {
     graphics_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     zero_mem(graphics_queue_desc);
     HR_ASSERT(d3d12->device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&d3d12->graphics_queue)));
-    AV_LOG(info, "D3D12 Graphics queue created");
+    log::info("D3D12 Graphics queue created");
 
     d3d12_create_command_block(d3d12);
     d3d12_create_sync(d3d12);
@@ -141,7 +142,7 @@ namespace avio::dx12 {
     // Release factory (must go last)
     d3d12->dxgi_factory->Release();
 
-    AV_LOG(info, "D3D12 Rhi terminated.");
+    log::info("D3D12 Rhi terminated.");
   }
 
   void d3d12_create_command_block(RhiD3D12* d3d12) {
@@ -199,7 +200,7 @@ namespace avio::dx12 {
   }
 
   static void d3d12_begin_frame(RHI* rhi) {
-    AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
+    avio::check_msg(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
     rhi->has_began_frame = true;
 
     auto d3d12 = cast_rhi<RhiD3D12>(rhi);
@@ -221,24 +222,24 @@ namespace avio::dx12 {
   }
 
   static void d3d12_end_frame(RHI* rhi) {
-    AV_ASSERT_MSG(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
+    avio::check_msg(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
     rhi->has_began_frame = false;
   }
 
   void init_global_rhi_pointers() {
-    get_rhi = get_rhi_d3d12;
-    rhi_submit_frame = d3d12_rhi_submit_frame;
-    rhi_begin_frame = d3d12_begin_frame;
-    rhi_end_frame = d3d12_end_frame;
+    funcs::get_rhi_ = get_rhi_d3d12;
+    funcs::rhi_submit_frame_ = d3d12_rhi_submit_frame;
+    funcs::rhi_begin_frame_ = d3d12_begin_frame;
+    funcs::rhi_end_frame_ = d3d12_end_frame;
 
     // Surface pointers
-    rhi_create_surface = d3d12_create_surface;
-    rhi_destroy_surface = d3d12_destroy_surface;
+    funcs::rhi_create_surface_ = d3d12_create_surface;
+    funcs::rhi_destroy_surface_ = d3d12_destroy_surface;
 
     // Swapchain pointers
-    rhi_create_swapchain = d3d12_create_swapchain;
-    rhi_destroy_swapchain = d3d12_destroy_swapchain;
-    rhi_present_swapchain = d3d12_present_swapchain;
+    funcs::rhi_create_swapchain_ = d3d12_create_swapchain;
+    funcs::rhi_destroy_swapchain_ = d3d12_destroy_swapchain;
+    funcs::rhi_present_swapchain_ = d3d12_present_swapchain;
 
     detail::init_cmd_pointers();
   }
