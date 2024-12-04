@@ -51,9 +51,13 @@ namespace avio {
     RhiShaderModule* compile_shader_module(RHI* rhi, const char* module_name);
   }
 
+  namespace rhi {
+    RHI* get();
+  }
+
   template <typename T>
   extern T* get_rhi_as() {
-    return (T*)get_rhi();
+    return (T*)rhi::get();
   }
 
   template <typename T, typename U>

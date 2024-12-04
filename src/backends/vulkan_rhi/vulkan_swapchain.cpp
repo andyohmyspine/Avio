@@ -259,7 +259,7 @@ namespace avio::vulkan {
       //            vk::to_string(present_result));
 
       vk_sc->requires_resize = true;
-      AV_LOG(info, "Vulkan swapchain resize requested.");
+      log::info("Vulkan swapchain resize requested.");
     } catch (...) {
       throw;
     }

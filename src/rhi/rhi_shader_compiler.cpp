@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 namespace avio {
-#define SHADER_COMPILER_ASSERT(x) AV_ASSERT(SLANG_SUCCEEDED((x)))
+#define SHADER_COMPILER_ASSERT(x) avio::check(SLANG_SUCCEEDED((x)))
 
   struct RhiShaderModule {
     RhiShaderCompiler* parent;
@@ -46,7 +46,7 @@ namespace avio {
       if (info.render_api == RenderAPI::vulkan) {
         target_desc.format = SLANG_SPIRV;
         target_desc.profile = compiler->global_session->findProfile("sm_6_6");
-        AV_LOG(info, "Initializing Slang Shader Compiler to work with SPIR-V (sm_6_6)");
+       log::info("Initializing Slang Shader Compiler to work with SPIR-V (sm_6_6)");
       }
 #endif
 
@@ -54,11 +54,11 @@ namespace avio {
       if (info.render_api == RenderAPI::d3d12) {
         target_desc.format = SLANG_DXIL;
         target_desc.profile = compiler->global_session->findProfile("sm_6_6");
-        AV_LOG(info, "Initializing Slang Shader Compiler to work with DXIL (sm_6_6)");
+       log::info("Initializing Slang Shader Compiler to work with DXIL (sm_6_6)");
       }
 #endif
 
-      AV_ASSERT(target_desc.format != SLANG_TARGET_UNKNOWN);
+      avio::check(target_desc.format != SLANG_TARGET_UNKNOWN);
       session_desc.searchPaths = info.shader_search_paths.data();
       session_desc.searchPathCount = (SlangInt)info.shader_search_paths.size();
 
@@ -71,7 +71,7 @@ namespace avio {
       try {
         rhi_compiler_compile_shader_module(compiler, "avio_shader");
       } catch (const Error& error) {
-        AV_LOG(critical,
+        log::critical(
                "Failed to load default slang module. Make sure to add avio shaders path to the shader includes.");
         throw;
       }
@@ -112,7 +112,7 @@ namespace avio {
       if (!linked_program) {
         throw Error("Failed to link shader program: {}", (const char*)diagnostics_blob->getBufferPointer());
       } else {
-        AV_LOG(warn, "Shader program linking produced following errors and warnings: {}",
+        log::warn("Shader program linking produced following errors and warnings: {}",
                (const char*)diagnostics_blob->getBufferPointer());
       }
     }
@@ -135,7 +135,7 @@ namespace avio {
         throw Error("Failed to compile shader module '{}': {}", module_name,
                     (const char*)diagnostics_blob->getBufferPointer());
       } else {
-        AV_LOG(warn, "'{}' shader compilation produced following errors and warnings: {}", module_name,
+        log::warn("'{}' shader compilation produced following errors and warnings: {}", module_name,
                (const char*)diagnostics_blob->getBufferPointer());
       }
     }

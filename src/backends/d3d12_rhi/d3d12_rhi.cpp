@@ -30,19 +30,19 @@ namespace avio::dx12 {
                                                D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext) {
     switch (Severity) {
       case D3D12_MESSAGE_SEVERITY_INFO:
-        AV_LOG(info, "D3D12 Validation: {}", pDescription);
+        log::info("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_MESSAGE:
-        AV_LOG(trace, "D3D12 Validation: {}", pDescription);
+        log::trace("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_WARNING:
-        AV_LOG(warn, "D3D12 Validation: {}", pDescription);
+        log::warn("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_ERROR:
-        AV_LOG(error, "D3D12 Validation: {}", pDescription);
+        log::error("D3D12 Validation: {}", pDescription);
         break;
       case D3D12_MESSAGE_SEVERITY_CORRUPTION:
-        AV_LOG(critical, "D3D12 Validation: {}", pDescription);
+        log::critical("D3D12 Validation: {}", pDescription);
         break;
       default:
         break;
@@ -68,7 +68,7 @@ namespace avio::dx12 {
     // Pick adapter
     HR_ASSERT(d3d12->dxgi_factory->EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE,
                                                               IID_PPV_ARGS(&d3d12->adapter)));
-    AV_LOG(info, "DXGI factory created.");
+    log::info("DXGI factory created.");
 
     // Log adapter
     DXGI_ADAPTER_DESC adapter_desc;
@@ -78,7 +78,7 @@ namespace avio::dx12 {
 
     char adapter_name[std::size(adapter_desc.Description)]{};
     wcstombs(adapter_name, adapter_desc.Description, std::size(adapter_desc.Description));
-    AV_LOG(info, "DXGI adapter selected: {}", adapter_name);
+    log::info("DXGI adapter selected: {}", adapter_name);
 
 // Create device
 #ifdef AVIO_ENABLE_GPU_VALIDATION
@@ -101,7 +101,7 @@ namespace avio::dx12 {
     graphics_queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     zero_mem(graphics_queue_desc);
     HR_ASSERT(d3d12->device->CreateCommandQueue(&graphics_queue_desc, IID_PPV_ARGS(&d3d12->graphics_queue)));
-    AV_LOG(info, "D3D12 Graphics queue created");
+    log::info("D3D12 Graphics queue created");
 
     d3d12_create_command_block(d3d12);
     d3d12_create_sync(d3d12);
@@ -142,7 +142,7 @@ namespace avio::dx12 {
     // Release factory (must go last)
     d3d12->dxgi_factory->Release();
 
-    AV_LOG(info, "D3D12 Rhi terminated.");
+    log::info("D3D12 Rhi terminated.");
   }
 
   void d3d12_create_command_block(RhiD3D12* d3d12) {

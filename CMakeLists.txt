@@ -5,6 +5,8 @@ if(MSVC)
     add_compile_options(/MP)
 endif()
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake/modules)
+
 # Options
 option(AVIO_ENABLE_GPU_VALIDATION "whether to enable GPU validation." ON)
 

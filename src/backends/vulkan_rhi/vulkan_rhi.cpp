@@ -31,6 +31,10 @@ namespace avio::vulkan {
         "VK_KHR_win32_surface",
 #endif
 
+#if defined(__linux__) && defined(AVIO_X11_AVAILABLE)
+        "VK_KHR_xlib_surface",
+#endif
+
 #if AV_VK_USE_DYNAMIC_RENDERING
         VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 #endif
@@ -72,13 +76,13 @@ namespace avio::vulkan {
                                   const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
     switch (messageSeverity) {
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-        AV_LOG(error, "Vulkan validation: {}", pCallbackData->pMessage);
+        log::error("Vulkan validation: {}", pCallbackData->pMessage);
         break;
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-        AV_LOG(info, "Vulkan validation: {}", pCallbackData->pMessage);
+        log::info("Vulkan validation: {}", pCallbackData->pMessage);
         break;
       case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-        AV_LOG(warn, "Vulkan validation: {}", pCallbackData->pMessage);
+        log::warn("Vulkan validation: {}", pCallbackData->pMessage);
         break;
       default:
         break;
@@ -95,7 +99,7 @@ namespace avio::vulkan {
       for (const auto& supported : supported_extensions) {
         if (strcmp(required, supported.extensionName.data()) == 0) {
           is_supported = true;
-          AV_LOG(trace, "Vulkan instance extension '{}' is supported.", required);
+          log::trace("Vulkan instance extension '{}' is supported.", required);
           break;
         }
       }
@@ -118,7 +122,7 @@ namespace avio::vulkan {
       for (const auto& supported : supported_layers) {
         if (strcmp(required, supported.layerName.data()) == 0) {
           is_supported = true;
-          AV_LOG(trace, "Vulkan instance layer '{}' is supported.", required);
+          log::trace("Vulkan instance layer '{}' is supported.", required);
           break;
         }
       }
@@ -152,7 +156,7 @@ namespace avio::vulkan {
 
     if (vulkan->physical_device.device) {
       auto device_props = vulkan->physical_device.device.getProperties();
-      AV_LOG(info, "Selected vulkan adapter: {}", device_props.deviceName.data());
+      log::info("Selected vulkan adapter: {}", device_props.deviceName.data());
     }
 
     create_vulkan_device(vulkan, info);
@@ -197,7 +201,7 @@ namespace avio::vulkan {
     // This should go last
     vulkan->instance.destroy();
 
-    AV_LOG(info, "Vulkan RHI terminated.");
+    log::info("Vulkan RHI terminated.");
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -231,7 +235,7 @@ namespace avio::vulkan {
 #endif
 
     vulkan->instance = vk::createInstance(inst_info);
-    AV_LOG(info, "Vulkan instance created.");
+    log::info("Vulkan instance created.");
 
 #ifdef AVIO_ENABLE_GPU_VALIDATION
     PFN_vkCreateDebugUtilsMessengerEXT create_messenger_func =
@@ -349,11 +353,11 @@ namespace avio::vulkan {
 #endif
 
     vulkan->device = vulkan->physical_device.device.createDevice(create_info);
-    AV_LOG(info, "Vulkan logical device created.");
+    log::info("Vulkan logical device created.");
 
     // Pick queues
     vulkan->graphics_queue = vulkan->device.getQueue(vulkan->physical_device.queue_indices.graphics, 0);
-    AV_LOG(info, "Vulkan graphics queue initialized.");
+    log::info("Vulkan graphics queue initialized.");
   }
 
   // ---------------------------------------------------------------------------------------------
@@ -401,7 +405,7 @@ namespace avio::vulkan {
   }
 
   static void vulkan_begin_frame(RHI* rhi) {
-    AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
+    avio::check_msg(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
     rhi->has_began_frame = true;
     auto vulkan = cast_rhi<RhiVulkan>(rhi);
     auto current_frame_in_flight = rhi->current_frame_in_flight;
@@ -426,7 +430,7 @@ namespace avio::vulkan {
   }
 
   static void vulkan_end_frame(RHI* rhi) {
-    AV_ASSERT_MSG(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
+    avio::check_msg(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
     rhi->has_began_frame = false;
 
     auto vulkan = cast_rhi<RhiVulkan>(rhi);

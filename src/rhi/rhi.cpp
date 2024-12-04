@@ -32,9 +32,9 @@ namespace avio {
     *out_rhi = rhi::get();
 
     RHI* rhi = *out_rhi;
-    AV_ASSERT(rhi->init_impl && rhi->shutdown_impl);
+    avio::check(rhi->init_impl && rhi->shutdown_impl);
 
-    AV_ASSERT_MSG(rhi->init_impl(rhi, info),
+    avio::check_msg(rhi->init_impl(rhi, info),
                   "Failed to initialize RHI native component.");
 
     (*out_rhi)->shader_compiler = detail::rhi_get_shader_compiler();

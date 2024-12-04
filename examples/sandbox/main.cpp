@@ -2,9 +2,14 @@
 
 #ifdef WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
+#endif
+
+#ifdef AVIO_X11_AVAILABLE
+#define GLFW_EXPOSE_NATIVE_X11
+#endif
+
 #include "GLFW/glfw3.h"
 #include "GLFW/glfw3native.h"
-#endif
 
 #include <filesystem>
 
@@ -21,6 +26,16 @@ void sandbox_main(avio::Engine& engine) {
 #ifdef WIN32
       .hwnd = glfwGetWin32Window(window),
 #endif
+
+#ifdef __linux__
+      .surface_type = infos::LinuxSurfaceType::x11,
+      #ifdef AVIO_X11_AVAILABLE
+      .x11 = {
+        .x11_display = glfwGetX11Display(),
+        .x11_window = glfwGetX11Window(window)
+      },
+      #endif
+#endif
   };
 
   RhiSurface* surface = rhi::create_surface(engine.rhi, surface_info);
@@ -34,7 +49,7 @@ void sandbox_main(avio::Engine& engine) {
     rhi::begin_frame(engine.rhi);
     {
       {
-        rhi::cmd::begin_draw_to_swapchain(engine.rhi, swapchain);
+        rhi::cmd::begin_draw_to_swapchain(engine.rhi, swapchain, true, avio::colors::magenta);
 
         rhi::cmd::end_draw_to_swapchain(engine.rhi, swapchain);
       }
@@ -59,7 +74,7 @@ int main(int argc, char** argv) {
   // These should be relative to root directory
   const char* shader_search_paths[] = {"examples/sandbox/shaders/", "shaders/"};
 
-  AV_COMMON_CATCH() {
+  AV_COMMON_CATCH()[&] {
     init_engine(engine, {
                             .args = make_launch_args(argc, argv),
                             .shader_search_paths = shader_search_paths,

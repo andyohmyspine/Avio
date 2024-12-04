@@ -7,3 +7,4 @@ target_link_libraries(avio_vulkan_rhi PUBLIC
 add_library(avio::vulkan_rhi ALIAS avio_vulkan_rhi)
 
 target_precompile_headers(avio_vulkan_rhi PRIVATE vulkan_pch.hpp)
+
