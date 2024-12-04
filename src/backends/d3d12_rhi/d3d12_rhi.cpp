@@ -1,6 +1,7 @@
 #include "d3d12_rhi.hpp"
 #include "d3d12_render_commands.hpp"
 #include "d3d12_surface.hpp"
+#include "rhi_interface.hpp"
 
 namespace avio::dx12 {
 
@@ -226,19 +227,19 @@ namespace avio::dx12 {
   }
 
   void init_global_rhi_pointers() {
-    get_rhi = get_rhi_d3d12;
-    rhi_submit_frame = d3d12_rhi_submit_frame;
-    rhi_begin_frame = d3d12_begin_frame;
-    rhi_end_frame = d3d12_end_frame;
+    funcs::get_rhi_ = get_rhi_d3d12;
+    funcs::rhi_submit_frame_ = d3d12_rhi_submit_frame;
+    funcs::rhi_begin_frame_ = d3d12_begin_frame;
+    funcs::rhi_end_frame_ = d3d12_end_frame;
 
     // Surface pointers
-    rhi_create_surface = d3d12_create_surface;
-    rhi_destroy_surface = d3d12_destroy_surface;
+    funcs::rhi_create_surface_ = d3d12_create_surface;
+    funcs::rhi_destroy_surface_ = d3d12_destroy_surface;
 
     // Swapchain pointers
-    rhi_create_swapchain = d3d12_create_swapchain;
-    rhi_destroy_swapchain = d3d12_destroy_swapchain;
-    rhi_present_swapchain = d3d12_present_swapchain;
+    funcs::rhi_create_swapchain_ = d3d12_create_swapchain;
+    funcs::rhi_destroy_swapchain_ = d3d12_destroy_swapchain;
+    funcs::rhi_present_swapchain_ = d3d12_present_swapchain;
 
     detail::init_cmd_pointers();
   }

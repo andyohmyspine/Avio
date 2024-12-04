@@ -9,62 +9,63 @@
 #include <filesystem>
 
 void sandbox_main(avio::Engine& engine) {
+  using namespace avio;
+
   glfwInit();
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
   GLFWwindow* window = glfwCreateWindow(1280, 720, "Sandbox", nullptr, nullptr);
 
   // Create surface
-  avio::infos::RhiSurfaceInfo surface_info{
+  infos::RhiSurfaceInfo surface_info{
 #ifdef WIN32
       .hwnd = glfwGetWin32Window(window),
 #endif
   };
 
-  avio::RhiSurface* surface = avio::rhi_create_surface(engine.rhi, surface_info);
-  avio::RhiSwapchain* swapchain = avio::rhi_create_swapchain(engine.rhi, {.surface = surface, .allow_vsync = false});
+  RhiSurface* surface = rhi::create_surface(engine.rhi, surface_info);
+  RhiSwapchain* swapchain = rhi::create_swapchain(engine.rhi, {.surface = surface, .allow_vsync = false});
 
-  avio::RhiShaderModule* test_shader = avio::rhi_compile_shader_module(engine.rhi, "hello-world");
+  RhiShaderModule* test_shader = rhi::compile_shader_module(engine.rhi, "hello-world");
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
 
-    avio::rhi_begin_frame(engine.rhi);
+    rhi::begin_frame(engine.rhi);
     {
       {
-        avio::rhi_cmd_begin_draw_to_swapchain(engine.rhi, swapchain, true, avio::colors::black);
-        
-        avio::rhi_cmd_end_draw_to_swapchain(engine.rhi, swapchain);
+        rhi::cmd::begin_draw_to_swapchain(engine.rhi, swapchain);
+
+        rhi::cmd::end_draw_to_swapchain(engine.rhi, swapchain);
       }
 
-      avio::rhi_submit_frame(engine.rhi);
-      avio::rhi_present_swapchain(engine.rhi, swapchain);
+      rhi::submit_frame(engine.rhi);
+      rhi::present_swapchain(engine.rhi, swapchain);
     }
-    avio::rhi_end_frame(engine.rhi);
+    rhi::end_frame(engine.rhi);
   }
 
-  avio::rhi_destroy_swapchain(engine.rhi, swapchain);
-  avio::rhi_destroy_surface(engine.rhi, surface);
+  rhi::destroy_swapchain(engine.rhi, swapchain);
+  rhi::destroy_surface(engine.rhi, surface);
 
   glfwTerminate();
 }
 
 int main(int argc, char** argv) {
-  avio::Engine engine;
+  using namespace avio;
+
+  Engine engine;
 
   // These should be relative to root directory
-  const char* shader_search_paths[] = {
-    "examples/sandbox/shaders/",
-    "shaders/"
-  };
+  const char* shader_search_paths[] = {"examples/sandbox/shaders/", "shaders/"};
 
   AV_COMMON_CATCH() {
-    avio::init_engine(engine, {
-                                  .args = avio::make_launch_args(argc, argv),
-                                  .shader_search_paths = shader_search_paths,
-                              });
+    init_engine(engine, {
+                            .args = make_launch_args(argc, argv),
+                            .shader_search_paths = shader_search_paths,
+                        });
     sandbox_main(engine);
-    avio::shutdown_engine(engine);
+    shutdown_engine(engine);
   };
 
   return 0;

@@ -44,7 +44,7 @@ namespace avio::dx12 {
 
   // -------------------------------------------------------------------------------------
   void detail::init_cmd_pointers() {
-    rhi_cmd_begin_draw_to_swapchain = d3d12_cmd_begin_draw_to_swapchain;
-    rhi_cmd_end_draw_to_swapchain = d3d12_cmd_end_draw_to_swapchain;
+    funcs::rhi_cmd_begin_draw_to_swapchain_ = d3d12_cmd_begin_draw_to_swapchain;
+    funcs::rhi_cmd_end_draw_to_swapchain_ = d3d12_cmd_end_draw_to_swapchain;
   }
 }  // namespace avio::dx12

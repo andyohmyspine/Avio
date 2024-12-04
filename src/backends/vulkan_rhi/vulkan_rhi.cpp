@@ -2,6 +2,7 @@
 #include "vulkan_render_commands.hpp"
 #include "vulkan_surface.hpp"
 #include "vulkan_swapchain.hpp"
+#include "rhi_interface.hpp"
 
 #include <array>
 #include <ranges>
@@ -436,19 +437,19 @@ namespace avio::vulkan {
 
   void init_global_rhi_pointers() {
     // Default functions
-    get_rhi = get_rhi_vulkan;
-    rhi_submit_frame = vulkan_rhi_submit_frame;
-    rhi_begin_frame = vulkan_begin_frame;
-    rhi_end_frame = vulkan_end_frame;
+    funcs::get_rhi_ = get_rhi_vulkan;
+    funcs::rhi_submit_frame_ = vulkan_rhi_submit_frame;
+    funcs::rhi_begin_frame_ = vulkan_begin_frame;
+    funcs::rhi_end_frame_ = vulkan_end_frame;
 
     // Surface functions
-    rhi_create_surface = vulkan_create_surface;
-    rhi_destroy_surface = vulkan_destroy_surface;
+    funcs::rhi_create_surface_ = vulkan_create_surface;
+    funcs::rhi_destroy_surface_ = vulkan_destroy_surface;
 
     // Swapchain functions
-    rhi_create_swapchain = vulkan_create_swapchain;
-    rhi_destroy_swapchain = vulkan_destroy_swapchain;
-    rhi_present_swapchain = vulkan_present_swapchain;
+    funcs::rhi_create_swapchain_ = vulkan_create_swapchain;
+    funcs::rhi_destroy_swapchain_ = vulkan_destroy_swapchain;
+    funcs::rhi_present_swapchain_ = vulkan_present_swapchain;
 
     detail::init_cmd_pointers();
   }

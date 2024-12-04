@@ -44,13 +44,12 @@ namespace avio {
   bool init_rhi(RHI** out_rhi, const infos::RHIInfo& info);
   void shutdown_rhi(RHI* rhi);
 
-  RHI_FUNC_PTR(get_rhi, RHI* (*)());
-  RHI_FUNC_PTR(rhi_begin_frame, void (*)(RHI* rhi));
-  RHI_FUNC_PTR(rhi_end_frame, void (*)(RHI* rhi));
-  RHI_FUNC_PTR(rhi_submit_frame, void (*)(RHI* rhi));
-
   // Shader API
-  struct RhiShaderModule* rhi_compile_shader_module(RHI* rhi, const char* module_name);
+  struct RhiShaderModule;
+
+  namespace rhi {
+    RhiShaderModule* compile_shader_module(RHI* rhi, const char* module_name);
+  }
 
   template <typename T>
   extern T* get_rhi_as() {
@@ -61,5 +60,7 @@ namespace avio {
   inline T* cast_rhi(U* rhi) {
     return (T*)rhi;
   }
+
+  // Function pointers
 
 }  // namespace avio

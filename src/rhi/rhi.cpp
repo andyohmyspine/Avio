@@ -1,4 +1,5 @@
 #include "rhi.hpp"
+#include "rhi_interface.hpp"
 
 #ifdef AVIO_D3D12_AVAILABLE
 #include "d3d12_rhi.hpp"
@@ -28,7 +29,7 @@ namespace avio {
 #endif
     }
 
-    *out_rhi = get_rhi();
+    *out_rhi = rhi::get();
 
     RHI* rhi = *out_rhi;
     AV_ASSERT(rhi->init_impl && rhi->shutdown_impl);
@@ -52,7 +53,7 @@ namespace avio {
     rhi->shutdown_impl(rhi);
   }
 
-  RhiShaderModule* rhi_compile_shader_module(RHI* rhi, const char* module_name) {
+  RhiShaderModule* rhi::compile_shader_module(RHI* rhi, const char* module_name) {
     return rhi_compiler_compile_shader_module(rhi->shader_compiler, module_name);
   }
 

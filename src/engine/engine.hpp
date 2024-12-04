@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core.hpp"
-#include "rhi.hpp"
+#include "rhi_interface.hpp"
 
 #include <span>
 #include <optional>
