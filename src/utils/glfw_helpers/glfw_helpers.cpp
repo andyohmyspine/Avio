@@ -9,6 +9,7 @@
 
 #include "glfw_helpers.hpp"
 #include "GLFW/glfw3native.h"
+#include "rhi_interface.hpp"
 
 
 namespace avio::glfw {
@@ -27,5 +28,9 @@ namespace avio::glfw {
     };
 
     return surface_info;
+  }
+
+  RhiSurface* create_window_surface(RHI* rhi, GLFWwindow* window) {
+    return rhi::create_surface(rhi, create_surface_info(window));
   }
 }  // namespace avio::glfw

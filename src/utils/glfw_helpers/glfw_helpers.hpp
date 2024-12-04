@@ -5,4 +5,5 @@
 
 namespace avio::glfw {
   infos::RhiSurfaceInfo create_surface_info(GLFWwindow* window);
+  RhiSurface* create_window_surface(RHI* rhi, GLFWwindow* window);
 }

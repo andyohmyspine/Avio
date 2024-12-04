@@ -17,7 +17,7 @@ void sandbox_main(avio::Engine& engine) {
   * using GLFW helpers module to create window surface.
   */
   // Create surface
-  RhiSurface* surface = rhi::create_surface(engine.rhi, glfw::create_surface_info(window));
+  RhiSurface* surface = glfw::create_window_surface(engine.rhi, window);
   RhiSwapchain* swapchain = rhi::create_swapchain(engine.rhi, {.surface = surface, .allow_vsync = false});
 
   /**
