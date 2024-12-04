@@ -66,6 +66,14 @@ namespace avio {
       session_desc.targets = &target_desc;
 
       compiler->global_session->createSession(session_desc, &compiler->session);
+
+      // Try to compile default library module
+      try {
+        rhi_compiler_compile_shader_module(compiler, "avio_shader");
+      } catch(const Error& error) {
+        AV_LOG(critical, "Failed to load default slang module. Make sure to add avio shaders path to the shader includes.");
+        throw;
+      }
     }
 
     void rhi_shutdown_shader_compiler(RhiShaderCompiler* compiler) {

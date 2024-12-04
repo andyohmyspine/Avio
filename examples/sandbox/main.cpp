@@ -54,7 +54,8 @@ int main(int argc, char** argv) {
 
   // These should be relative to root directory
   const char* shader_search_paths[] = {
-    "examples/sandbox/assets/shaders/"
+    "examples/sandbox/shaders/",
+    "shaders/"
   };
 
   AV_COMMON_CATCH() {
