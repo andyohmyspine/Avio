@@ -1,0 +1,5 @@
+avio_create_static_module(avio_glfw_helpers)
+add_library(avio::glfw_helpers ALIAS avio_glfw_helpers)
+
+target_link_libraries(avio_glfw_helpers PUBLIC avio::rhi glfw)
+target_compile_definitions(avio_glfw_helpers PUBLIC AVIO_USE_GLFW_HELPERS)

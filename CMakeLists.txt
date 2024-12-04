@@ -9,6 +9,15 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake/modul
 
 # Options
 option(AVIO_ENABLE_GPU_VALIDATION "whether to enable GPU validation." ON)
+option(AVIO_ENABLE_EXAMPLES "Whether to build examples" ON)
+
+if(AVIO_ENABLE_EXAMPLES)
+    set(AVIO_ENABLE_GLFW ON CACHE BOOL "" FORCE)
+    set(AVIO_ENABLE_GLFW_HELPERS ON CACHE BOOL "" FORCE)
+endif()
+
+option(AVIO_ENABLE_GLFW_HELPERS "Enable GLFW helpers (THIS REQUIRES GLFW TO BE IN PROJECT)" ON)
+option(AVIO_ENABLE_GLFW "Whether to enable included glfw module." ON)
 
 add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
@@ -16,15 +25,13 @@ add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 include("cmake/Macros.cmake")
 add_subdirectory(src)
 
-# 
+#
 # if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_LIST_DIR})
-#     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-#     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-#     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/arch)
-# endif() 
-# 
-
-option(AVIO_BUILD_EXAMPLES "Whether to build examples" ON)
-if(AVIO_BUILD_EXAMPLES)
+# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/arch)
+# endif()
+#
+if(AVIO_ENABLE_EXAMPLES)
     add_subdirectory(examples)
 endif()

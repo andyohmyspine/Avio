@@ -28,9 +28,15 @@ avio::shutdown_engine(engine);
 
 See ```examples/sandbox/main.cpp``` for example.
 
+# Tools
+Avio already comes with spdlog and glfw included as submodules.
+
 # CMAKE OPTIONS
 | Option | Description | Default Value |
 | ------ | ----------- | ------------- |
 | **AVIO_USES_CUSTOM_SPDLOG** | Set to **ON** if you already have spdlog | OFF |
 | **AVIO_ENABLE_GPU_VALIDATION** | Enable validation for graphics APIs | ON |
 | **AVIO_ENABLE_SLANG** | Build and use Slang | ON |
+| **AVIO_ENABLE_EXAMPLES** | Build examples | ON |
+| **AVIO_ENABLE_GLFW** | Build glfw | ON |
+| **AVIO_ENABLE_GLFW_HELPERS** | Build glfw helpers | ON |
