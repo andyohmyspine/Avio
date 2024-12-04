@@ -27,3 +27,10 @@ avio::shutdown_engine(engine);
 ```
 
 See ```examples/sandbox/main.cpp``` for example.
+
+# CMAKE OPTIONS
+| Option | Description | Default Value |
+| ------ | ----------- | ------------- |
+| **AVIO_USES_CUSTOM_SPDLOG** | Set to **ON** if you already have spdlog | OFF |
+| **AVIO_ENABLE_GPU_VALIDATION** | Enable validation for graphics APIs | ON |
+| **AVIO_ENABLE_SLANG** | Build and use Slang | ON |
