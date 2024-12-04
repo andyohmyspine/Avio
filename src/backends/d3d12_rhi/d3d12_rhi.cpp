@@ -200,7 +200,7 @@ namespace avio::dx12 {
   }
 
   static void d3d12_begin_frame(RHI* rhi) {
-    AV_ASSERT_MSG(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
+    avio::check_msg(!rhi->has_began_frame, "Failed to begin the frame. Did you forget to end the frame?");
     rhi->has_began_frame = true;
 
     auto d3d12 = cast_rhi<RhiD3D12>(rhi);
@@ -222,7 +222,7 @@ namespace avio::dx12 {
   }
 
   static void d3d12_end_frame(RHI* rhi) {
-    AV_ASSERT_MSG(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
+    avio::check_msg(rhi->has_began_frame, "Failed to end the frame. Did you forget to begin the frame?");
     rhi->has_began_frame = false;
   }
 
