@@ -10,7 +10,7 @@
 #include "rhi_types.hpp"
 
 #define VK_ASSERT(result) \
-  avio::check(((vk::Result)result) == vk::Result::eSuccess)
+  avio::check_msg(((vk::Result)result) == vk::Result::eSuccess, #result)
 
 namespace avio::vulkan {
   struct RhiVulkan;

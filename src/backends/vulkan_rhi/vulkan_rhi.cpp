@@ -8,6 +8,10 @@
 #include <ranges>
 #include <span>
 
+#ifdef AVIO_ENABLE_GLFW
+#include "GLFW/glfw3.h"
+#endif
+
 namespace avio::vulkan {
 
   static bool vulkan_rhi_init(RHI* rhi, const infos::RHIInfo& info);
@@ -23,26 +27,52 @@ namespace avio::vulkan {
   };
 
   // ---------------------------------------------------------------------------------------------
-  static consteval auto get_required_instance_extensions() noexcept {
-    return std::array{
-        "VK_KHR_surface",
 
+  static auto get_required_instance_extensions() noexcept {
+#ifdef AVIO_ENABLE_GLFW
+    std::vector<const char*> out_extensions
+#else
+    return std::array
+#endif
+        {
+            "VK_KHR_surface",
+
+#ifndef AVIO_ENABLE_GLFW
 #if defined(WIN32)
-        "VK_KHR_win32_surface",
+            "VK_KHR_win32_surface",
 #endif
 
 #if defined(__linux__) && defined(AVIO_X11_AVAILABLE)
-        "VK_KHR_xlib_surface",
+            "VK_KHR_xlib_surface",
+#endif
 #endif
 
 #if AV_VK_USE_DYNAMIC_RENDERING
-        VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+            VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 #endif
 
 #if defined(AVIO_ENABLE_GPU_VALIDATION)
-        "VK_EXT_debug_utils",
+            "VK_EXT_debug_utils",
 #endif
-    };
+        };
+
+#ifdef AVIO_ENABLE_GLFW
+    glfwInit();
+
+    uint32_t glfw_ext_count = 0;
+    const char** glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
+
+    for (uint32_t index = 0; index < glfw_ext_count; ++index) {
+      // Only add extension if we don't have it.
+      if (std::ranges::find_if(out_extensions, [index, glfw_extensions](const char* ext) {
+            return strcmp(glfw_extensions[index], ext) == 0;
+          }) == out_extensions.end()) {
+        out_extensions.push_back(glfw_extensions[index]);
+      }
+    }
+
+    return out_extensions;
+#endif
   }
 
   // ---------------------------------------------------------------------------------------------

@@ -72,7 +72,12 @@ namespace avio::vulkan {
 
     // surface->base.info = info;
     VkSurfaceKHR vk_surface{};
-    VK_ASSERT(glfwCreateWindowSurface(vulkan->instance, window, nullptr, &vk_surface));
+    VkResult result = glfwCreateWindowSurface(vulkan->instance, window, nullptr, &vk_surface);
+    if(result != VK_SUCCESS) {
+      const char* error_message;
+      glfwGetError(&error_message);
+      throw Error("Failed to create vulkan window surface: {}", error_message);
+    }
 
     surface->vulkan_surface = vk_surface;
     return &surface->base;
