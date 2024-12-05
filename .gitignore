@@ -3,6 +3,7 @@ bin/
 build/
 release_build/
 out/
+intermediate/
 
 .vs/
 CMakeSettings.json

@@ -2,6 +2,7 @@ avio_create_static_module(avio_rhi)
 add_library(avio::rhi ALIAS avio_rhi)
 
 target_link_libraries(avio_rhi PUBLIC avio::core)
+add_dependencies(avio_rhi copy_slang_headers)
 
 if(WIN32)
   set(AVIO_D3D12_AVAILABLE ON CACHE BOOL "")
@@ -18,7 +19,7 @@ else()
 endif()
 
 if(AVIO_ENABLE_SLANG)
-  targeT_link_libraries(avio_rhi PRIVATE slang slang-rt)
+  target_link_libraries(avio_rhi PUBLIC avio::slang)
 endif()
 
 if(AVIO_ENABLE_GPU_VALIDATION)
@@ -52,7 +53,7 @@ if(UNIX AND NOT APPLE)
     target_include_directories(avio_rhi PUBLIC ${X11_INCLUDE_DIR})
   endif()
 
-  find_package(Wayland REQUIRED)
+  find_package(Wayland QUIET)
 
   # target_include_directories(avio_rhi PUBLIC ${X11_INCLUDE_DIR})
 endif()

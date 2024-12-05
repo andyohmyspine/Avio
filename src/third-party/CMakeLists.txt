@@ -1,23 +1,24 @@
 include(FetchContent)
 
 option(AVIO_USES_CUSTOM_SPDLOG "Whether the custom spdlog version is specified. This will not include spdlog in that case.")
+
 if(NOT AVIO_USES_CUSTOM_SPDLOG)
-    add_library(spdlog INTERFACE)
+  add_library(spdlog INTERFACE)
 endif()
+
 target_include_directories(spdlog INTERFACE spdlog/include)
 
-if(WIN32)
-  message(STATUS "Downloading and configuring DirectX headers")
-  FetchContent_Declare(DirectX-Headers
-    GIT_REPOSITORY https://github.com/Microsoft/DirectX-Headers)
-  FetchContent_MakeAvailable(DirectX-Headers)
-endif()
+message(STATUS "Downloading and configuring DirectX headers")
+FetchContent_Declare(DirectX-Headers
+  GIT_REPOSITORY https://github.com/microsoft/DirectX-Headers
+  GIT_TAG 48a762973271c5a75869946bf1fdbc489a628a5c)
+FetchContent_MakeAvailable(DirectX-Headers)
 
 # TODO: Remove slang when compiling shipping build
 option(AVIO_ENABLE_SLANG "Whether to enable slang shader compiler" ON)
 
 if(AVIO_ENABLE_SLANG)
-    add_subdirectory(slang)
+  add_subdirectory(slang)
 endif()
 
 if(AVIO_ENABLE_GLFW AND NOT AVIO_USES_CUSTOM_GLFW)

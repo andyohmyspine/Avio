@@ -6,6 +6,11 @@
     ],
     "cwd": "${workspaceFolder}",
   },
+  "cmake.buildDirectory": "${workspaceFolder}/intermediate",
+  "cmake.configureSettings": {
+    "AVIO_ENABLE_EXAMPLES": true
+  },
+
   "files.associations": {
     "*.glsli": "glsl",
     "xutility": "cpp",

@@ -17,7 +17,16 @@ set(SLANG_ENABLE_SLANGC OFF CACHE BOOL "")
 FetchContent_MakeAvailable(slang)
 
 macro(copy_slang_dlls _module_name)
-    add_custom_command(TARGET ${_module_name} POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:slang> $<TARGET_FILE_DIR:${_module_name}>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:slang-rt> $<TARGET_FILE_DIR:${_module_name}>)
+    add_custom_command(TARGET ${_module_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:slang> $<TARGET_FILE_DIR:${_module_name}>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:slang-rt> $<TARGET_FILE_DIR:${_module_name}>)
 endmacro()
+
+FetchContent_GetProperties(slang
+    SOURCE_DIR slang_source_dir)
+
+message(STATUS "Slang source dir is set to ${slang_source_dir}")
+add_library(slang_interface INTERFACE)
+target_link_libraries(slang_interface INTERFACE slang slang-rt)
+target_include_directories(slang_interface INTERFACE ${slang_source_dir}/include)
+add_library(avio::slang ALIAS slang_interface)

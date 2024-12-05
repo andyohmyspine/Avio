@@ -236,6 +236,10 @@ namespace avio::dx12 {
     funcs::rhi_create_surface_ = d3d12_create_surface;
     funcs::rhi_destroy_surface_ = d3d12_destroy_surface;
 
+  #ifdef AVIO_ENABLE_GLFW
+    funcs::rhi_create_surface_glfw_ = d3d12_create_surface_glfw;
+  #endif
+
     // Swapchain pointers
     funcs::rhi_create_swapchain_ = d3d12_create_swapchain;
     funcs::rhi_destroy_swapchain_ = d3d12_destroy_swapchain;

@@ -1,6 +1,3 @@
 [submodule "src/third-party/spdlog"]
 	path = src/third-party/spdlog
 	url = https://github.com/gabime/spdlog
-[submodule "src/third-party/DirectX-Headers"]
-	path = src/third-party/DirectX-Headers
-	url = https://github.com/Microsoft/DirectX-Headers
