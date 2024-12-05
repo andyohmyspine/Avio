@@ -1,8 +1,8 @@
 #include "vulkan_rhi.hpp"
+#include "rhi_interface.hpp"
 #include "vulkan_render_commands.hpp"
 #include "vulkan_surface.hpp"
 #include "vulkan_swapchain.hpp"
-#include "rhi_interface.hpp"
 
 #include <array>
 #include <ranges>
@@ -45,7 +45,7 @@ namespace avio::vulkan {
     };
   }
 
-    // ---------------------------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------------------------
   static consteval auto get_required_device_extensions() noexcept {
     return std::array{
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -449,6 +449,10 @@ namespace avio::vulkan {
     // Surface functions
     funcs::rhi_create_surface_ = vulkan_create_surface;
     funcs::rhi_destroy_surface_ = vulkan_destroy_surface;
+
+#ifdef AVIO_ENABLE_GLFW
+    funcs::rhi_create_surface_glfw_ = vulkan_create_surface_glfw;
+#endif
 
     // Swapchain functions
     funcs::rhi_create_swapchain_ = vulkan_create_swapchain;

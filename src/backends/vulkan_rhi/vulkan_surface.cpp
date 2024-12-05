@@ -14,6 +14,11 @@
 #include <vulkan/vulkan_macos.h>
 #endif
 
+#ifdef AVIO_ENABLE_GLFW
+#define GLFW_INCLUDE_VULKAN
+#include "GLFW/glfw3.h"
+#endif
+
 namespace avio::vulkan {
 
   RhiSurface* vulkan_create_surface(RHI* rhi, const infos::RhiSurfaceInfo& info) {
@@ -37,28 +42,42 @@ namespace avio::vulkan {
 // ------ LINUX -----------
 #elif defined(__linux__)
 #ifdef AVIO_X11_AVAILABLE
-  if(info.surface_type == infos::LinuxSurfaceType::x11) {
-    VkXlibSurfaceCreateInfoKHR create_info {
-      .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
-      .pNext = nullptr,
-      .flags = 0,
-      .dpy = info.x11.x11_display,
-      .window = info.x11.x11_window,
-    };
-    VK_ASSERT(vkCreateXlibSurfaceKHR(vulkan->instance, &create_info, nullptr, &vk_surface));
-  }
+    if (info.surface_type == infos::LinuxSurfaceType::x11) {
+      VkXlibSurfaceCreateInfoKHR create_info{
+          .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+          .pNext = nullptr,
+          .flags = 0,
+          .dpy = info.x11.x11_display,
+          .window = info.x11.x11_window,
+      };
+      VK_ASSERT(vkCreateXlibSurfaceKHR(vulkan->instance, &create_info, nullptr, &vk_surface));
+    }
 #endif
 // ------ MAC -----------
 #elif defined(__APPLE__)
-
+#error "Unsupported if not using GLFW"
 #endif
-
+    // ifndef AVIO_USES_GLFW
     if (vk_surface) {
       surface->vulkan_surface = vk_surface;
     }
 
     return &surface->base;
   }
+
+#ifdef AVIO_ENABLE_GLFW
+  RhiSurface* vulkan_create_surface_glfw(RHI* rhi, GLFWwindow* window) {
+    RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);
+    VulkanSurface* surface = vulkan->surfaces.allocate();
+
+    // surface->base.info = info;
+    VkSurfaceKHR vk_surface{};
+    VK_ASSERT(glfwCreateWindowSurface(vulkan->instance, window, nullptr, &vk_surface));
+
+    surface->vulkan_surface = vk_surface;
+    return &surface->base;
+  }
+#endif
 
   void vulkan_destroy_surface(RHI* rhi, RhiSurface* surface) {
     RhiVulkan* vulkan = cast_rhi<RhiVulkan>(rhi);

@@ -4,6 +4,3 @@
 [submodule "src/third-party/DirectX-Headers"]
 	path = src/third-party/DirectX-Headers
 	url = https://github.com/Microsoft/DirectX-Headers
-[submodule "examples/third-party/glfw"]
-	path = examples/third-party/glfw
-	url = https://github.com/glfw/glfw

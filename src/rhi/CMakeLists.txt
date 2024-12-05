@@ -35,6 +35,11 @@ if(AVIO_VULKAN_AVAILABLE)
   target_compile_definitions(avio_rhi PUBLIC AVIO_VULKAN_AVAILABLE)
 endif()
 
+if(AVIO_ENABLE_GLFW)
+  target_compile_definitions(avio_rhi PUBLIC AVIO_ENABLE_GLFW)
+  target_link_libraries(avio_rhi PUBLIC glfw)
+endif()
+
 if(UNIX AND NOT APPLE)
   find_package(X11 REQUIRED)
   if(X11_FOUND)

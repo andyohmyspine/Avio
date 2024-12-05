@@ -8,3 +8,7 @@
 #elif defined(__APPLE__)
 #include "platforms/rhi_surface_info_apple.hpp"
 #endif
+
+#ifdef AVIO_ENABLE_GLFW
+#include "platforms/rhi_surface_info_glfw.hpp"
+#endif

@@ -6,7 +6,6 @@ add_subdirectory(rhi)
 add_subdirectory(engine)
 add_subdirectory(backends)
 add_subdirectory(third-party)
-add_subdirectory(utils)
 
 target_link_libraries(avio
     INTERFACE

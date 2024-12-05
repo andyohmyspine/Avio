@@ -39,4 +39,4 @@ Avio already comes with spdlog and glfw included as submodules.
 | **AVIO_ENABLE_SLANG** | Build and use Slang | ON |
 | **AVIO_ENABLE_EXAMPLES** | Build examples | ON |
 | **AVIO_ENABLE_GLFW** | Build glfw | ON |
-| **AVIO_ENABLE_GLFW_HELPERS** | Build glfw helpers | ON |
+| **AVIO_USES_CUSTOM_GLFW** | Set to **ON** if you already have glfw | OFF |

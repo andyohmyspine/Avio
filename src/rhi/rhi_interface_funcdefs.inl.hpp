@@ -21,6 +21,12 @@ namespace avio::rhi {
     return avio::funcs::rhi_create_surface_(rhi, info);
   }
 
+#ifdef AVIO_ENABLE_GLFW
+  inline RhiSurface* create_surface_glfw(RHI* rhi, GLFWwindow* window) {
+    return avio::funcs::rhi_create_surface_glfw_(rhi, window);
+  }
+#endif
+
   inline void destroy_surface(RHI* rhi, RhiSurface* surface) {
     avio::funcs::rhi_destroy_surface_(rhi, surface);
   }

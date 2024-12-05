@@ -16,8 +16,8 @@ if(AVIO_ENABLE_EXAMPLES)
     set(AVIO_ENABLE_GLFW_HELPERS ON CACHE BOOL "" FORCE)
 endif()
 
-option(AVIO_ENABLE_GLFW_HELPERS "Enable GLFW helpers (THIS REQUIRES GLFW TO BE IN PROJECT)" ON)
 option(AVIO_ENABLE_GLFW "Whether to enable included glfw module." ON)
+option(AVIO_USES_CUSTOM_GLFW "Whether there is a custom glfw already in the project" OFF)
 
 add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 add_compile_definitions(_CRT_SECURE_NO_WARNINGS)

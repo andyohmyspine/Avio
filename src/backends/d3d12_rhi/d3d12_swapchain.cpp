@@ -87,7 +87,7 @@ namespace avio::dx12 {
     d3d12_flush_command_queue(d3d12);
 
     D3D12Swapchain* d3d12_sc = (D3D12Swapchain*)swapchain;
-    for(uint32_t index = 0; index < d3d12_sc->image_count; ++index) {
+    for (uint32_t index = 0; index < d3d12_sc->image_count; ++index) {
       d3d12_sc->swapchain_images[index].image->Release();
     }
 
@@ -106,15 +106,15 @@ namespace avio::dx12 {
 
     RECT window_rect{};
     GetClientRect(d3d12_sc->base.info.surface->info.hwnd, &window_rect);
-    
+
     // Check if we need to resize
     const uint32_t width = (uint32_t)window_rect.right - (uint32_t)window_rect.left;
     const uint32_t height = (uint32_t)window_rect.bottom - (uint32_t)window_rect.top;
-    if(width != d3d12_sc->width || height != d3d12_sc->height) {
-      
+    if (width != d3d12_sc->width || height != d3d12_sc->height) {
+
       // Resize the swapchain
       d3d12_flush_command_queue(cast_rhi<RhiD3D12>(rhi));
-      
+
       // First destroy the swapchain
       infos::RhiSwapchainInfo sc_info = d3d12_sc->base.info;
       d3d12_destroy_swapchain(rhi, swapchain);
@@ -122,9 +122,9 @@ namespace avio::dx12 {
       // Then recreate the swapchain
       RhiSwapchain* new_sc = d3d12_create_swapchain(rhi, sc_info);
 
-      // Just copy a new swapchain to the old place. 
+      // Just copy a new swapchain to the old place.
       *d3d12_sc = std::move(*(D3D12Swapchain*)new_sc);
-    }    
+    }
   }
 
 }  // namespace avio::dx12
