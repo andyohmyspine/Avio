@@ -2,18 +2,18 @@
     "configurations": [
         {
             "name": "Win32",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compileCommands": "${workspaceFolder}/intermediate/compile_commands.json",
             "cppStandard": "c++23",
             "intelliSenseMode": "clang-x64"
         },
         {
             "name": "Mac",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compileCommands": "${workspaceFolder}/intermediate/compile_commands.json",
             "cppStandard": "c++23"
         },
         {
             "name": "Linux",
-            "compileCommands": "${workspaceFolder}/build/compile_commands.json",
+            "compileCommands": "${workspaceFolder}/intermediate/compile_commands.json",
             "cppStandard": "c++23"
         }
     ],
