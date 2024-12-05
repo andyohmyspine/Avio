@@ -56,9 +56,9 @@ namespace avio {
       return std::get<std::array<T, RHI_DEFAULT_SWAPCHAIN_IMAGE_COUNT>>(data)[index];
     }
 
-    inline auto begin() { return uses_vector ? get_vector().data : get_array().data; }
+    inline auto begin() { return uses_vector ? get_vector().data() : get_array().data(); }
     inline auto end() {
-      return uses_vector ? get_vector().data = get_vector().size() : get_array().data + get_array().size;
+      return uses_vector ? get_vector().data() + get_vector().size() : get_array().data() + get_array().size();
     }
   };
 

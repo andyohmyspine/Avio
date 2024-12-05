@@ -117,6 +117,10 @@ namespace avio::dx12 {
 
       // First destroy the swapchain
       infos::RhiSwapchainInfo sc_info = d3d12_sc->base.info;
+      for(auto& descriptor : d3d12_sc->swapchain_image_views) {
+        d3d12_destroy_descriptors(&cast_rhi<RhiD3D12>(rhi)->rtv_descriptor_pool, &descriptor.descriptor_handle);
+      }
+
       d3d12_destroy_swapchain(rhi, swapchain);
 
       // Then recreate the swapchain

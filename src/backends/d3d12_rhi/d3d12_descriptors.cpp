@@ -51,17 +51,34 @@ namespace avio::dx12 {
            shader_visible ? "shader-visible" : "non-shader-visible", num_descriptors);
     return out_pool;
   }
+
   void d3d12_destroy_descriptor_pool(RhiD3D12* rhi, D3D12DescriptorPool* pool) {
+    pool->handle_free_list = {};
+
     if (pool && pool->heap) {
       pool->heap->Release();
     }
-
-    zero_mem(pool);
   }
+
+  static D3D12DescriptorHandle find_handle_in_free_list(D3D12DescriptorPool* pool, uint64_t num_descriptors) {
+    auto iter = std::ranges::find_if(pool->handle_free_list, [num_descriptors](const D3D12DescriptorHandle& handle) {
+      return handle.num_descriptors >= num_descriptors;
+    });
+
+    if(iter != pool->handle_free_list.end()) {
+      auto output = *iter;
+      pool->handle_free_list.erase(iter);
+      return output;
+    }
+
+    return {};
+  }
+
   D3D12DescriptorHandle d3d12_allocate_descriptors(D3D12DescriptorPool* pool, uint64_t num_descriptors) {
-    D3D12DescriptorHandle out_handle{};
-    
-    // TODO: Handle free list
+    D3D12DescriptorHandle out_handle = find_handle_in_free_list(pool, num_descriptors);
+    if(out_handle.num_descriptors >= num_descriptors) {
+      return out_handle;
+    }
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE cpu_handle(pool->cpu_handle, (INT)pool->allocated_descriptors, pool->descriptor_increment_size);
     CD3DX12_GPU_DESCRIPTOR_HANDLE gpu_handle(pool->gpu_handle);
@@ -77,5 +94,12 @@ namespace avio::dx12 {
 
     pool->allocated_descriptors += num_descriptors;
     return out_handle;
+  }
+  
+  void d3d12_destroy_descriptors(D3D12DescriptorPool* pool, D3D12DescriptorHandle* handle) {
+    if(handle && handle->num_descriptors > 0) {
+      pool->handle_free_list.push_front(*handle);
+      zero_mem(handle);
+    }
   }
 }  // namespace avio::dx12
