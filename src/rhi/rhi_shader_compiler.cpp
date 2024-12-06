@@ -120,6 +120,21 @@ namespace avio {
     return linked_program;
   }
 
+
+  struct RhiShaderModuleReflection {
+    
+  };
+
+  static auto collect_linked_module_reflection(slang::IComponentType* program) {
+    Slang::ComPtr<ISlangBlob> diag_blob;
+    slang::ProgramLayout* layout = program->getLayout(0, diag_blob.writeRef());
+
+    for (SlangUInt index = 0; index < layout->getEntryPointCount(); ++index) {
+      slang::EntryPointReflection* entry_point = layout->getEntryPointByIndex(index);
+      const SlangStage stage = entry_point->getStage();
+    }
+  }
+
   RhiShaderModule* rhi_compiler_compile_shader_module(RhiShaderCompiler* compiler, const char* module_name) {
     std::string module_name_string = module_name;
     if (!compiler->shader_modules.empty() && compiler->shader_modules.contains(module_name_string)) {
@@ -140,8 +155,11 @@ namespace avio {
       }
     }
 
-    // Collect module reflection info
+    // Link the shader program
     slang::IComponentType* program = link_shader_entry_points(compiler, out_module.shader_module);
+    
+    // Collect module reflection info
+    collect_linked_module_reflection(program);
 
     compiler->shader_modules[module_name_string] = out_module;
     return &compiler->shader_modules.at(module_name_string);

@@ -18,9 +18,8 @@ else()
   set(AVIO_VULKAN_AVAILABLE OFF CACHE BOOL "")
 endif()
 
-if(AVIO_ENABLE_SLANG)
-  target_link_libraries(avio_rhi PUBLIC avio::slang)
-endif()
+target_link_libraries(avio_rhi PUBLIC avio::slang)
+
 
 if(AVIO_ENABLE_GPU_VALIDATION)
   target_compile_definitions(avio_rhi PUBLIC AVIO_ENABLE_GPU_VALIDATION)

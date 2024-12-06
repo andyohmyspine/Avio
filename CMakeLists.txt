@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.25)
 project(Avio)
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED)
+
 if(MSVC)
-    add_compile_options(/MP)
+    add_compile_options(/MP /Zc:nrvo)
 endif()
 
 include(CMakeDependentOption)
@@ -10,6 +13,7 @@ include(CMakeDependentOption)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR}/cmake/modules)
 
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_LIST_DIR})
+    set_property(GLOBAL PROPERTY INTERPROCEDURAL_OPTIMIZATION ON)
     set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/archive)
