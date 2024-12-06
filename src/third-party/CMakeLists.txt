@@ -14,8 +14,8 @@ FetchContent_Declare(DirectX-Headers
   GIT_TAG 48a762973271c5a75869946bf1fdbc489a628a5c)
 FetchContent_MakeAvailable(DirectX-Headers)
 
+add_subdirectory(slang)
 
-  add_subdirectory(slang)
 if(AVIO_ENABLE_GLFW AND NOT AVIO_USES_CUSTOM_GLFW)
   message(STATUS "Downloading and configuring GLFW. This may take a second or two.")
   set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
