@@ -17,3 +17,6 @@ FetchContent_Declare(D3D12MA
   GIT_TAG 6a61103936dfadedca584e1a521fab6943d3b5ad)
 
 FetchContent_MakeAvailable(D3D12MA)
+
+# There are a few errors in D3D12MA (fix them somehow)
+# target_link_libraries(avio_d3d12_rhi PRIVATE D3D12MemoryAllocator)

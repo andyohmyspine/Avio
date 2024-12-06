@@ -88,6 +88,8 @@ namespace avio::vulkan {
 #if AV_REQUIRE_DESCRIPTOR_BUFFERS
         VK_EXT_DESCRIPTOR_BUFFER_EXTENSION_NAME,
 #endif
+
+      VK_KHR_PUSH_DESCRIPTOR_EXTENSION_NAME,
     };
   }
 
